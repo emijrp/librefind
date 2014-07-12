@@ -1,6 +1,6 @@
 #LibreFind
 
-*[LibreFind](http://www.librefind.org)* is a free *wiki search engine* with results sorted by *community consensus*.
+**[LibreFind](http://www.librefind.org)** is a free **wiki search engine** with results sorted by **community consensus**.
 
 We use MediaWiki, the software of Wikipedia, and Semantic MediaWiki. When you search any term, LibreFind returns a results page if available, in other case a blank page is open and ready for you to collaborate.
 
@@ -13,9 +13,9 @@ You can see a beta version in [librefind.org](http://www.librefind.org) (edits c
 * Privacy
 * Transparency
 
-## About this Google Code project
+## About this project
 
-This Google Code project will include source code for bots, crawlers and any software we run over LibreFind. The real content is saved in [librefind.org](http://librefind.org).
+This project will include source code for bots, crawlers and any software we run over LibreFind. The real content is saved in [librefind.org](http://librefind.org).
 
 ## Contribute
 

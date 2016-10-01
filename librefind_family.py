@@ -1,11 +1,19 @@
 # -*- coding: utf-8  -*-
-__version__ = '$Id: vikidia_family.py 9015 2011-02-28 17:57:55Z lcawte $'
+"""Family module for Wikanda wikis."""
+from __future__ import unicode_literals
 
-import family
+__version__ = '$Id:  $'
 
-class Family(family.Family):
+from pywikibot import family
+
+# The MediaWiki family
+class Family(family.WikimediaFamily):
+
+    """Family module for LibreFind wikis."""
+
     def __init__(self):
-        family.Family.__init__(self)
+        """Constructor."""
+        super(Family, self).__init__()
         self.name = 'librefind'
 
         self.langs = {
@@ -33,7 +41,7 @@ class Family(family.Family):
     # Which version of MediaWiki is used? REQUIRED
     def version(self, code):
         # Replace with the actual version being run on your wiki
-        return '1.21alpha'
+        return '1.27.1'
 
     def code2encoding(self, code):
         """Return the encoding for a specific language wiki"""
@@ -46,3 +54,6 @@ class Family(family.Family):
 
     def apipath(self, code):
         return '/w/api.php'
+
+    def protocol(self, code):
+        return 'HTTPS'

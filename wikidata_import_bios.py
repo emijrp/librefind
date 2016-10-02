@@ -241,7 +241,7 @@ def main():
         'Andorra': {'masculino': 'andorrano', 'femenino': 'andorrana' }, 
         'Angola': {'masculino': 'angoleño', 'femenino': 'angoleña' }, 
         'Antigua y Barbuda': {'masculino': 'antiguano', 'femenino': 'antiguana' }, 
-        'Arabia Saudita': {'saudí': 'alemán', 'femenino': 'saudí' }, 
+        'Arabia Saudita': {'masculino': 'saudí', 'femenino': 'saudí' }, 
         'Argelia': {'masculino': 'argelino', 'femenino': 'argelina' }, 
         'Argentina': {'masculino': 'argentino', 'femenino': 'argentina' }, 
         'Armenia': {'masculino': 'armenio', 'femenino': 'armenia' }, 
@@ -663,8 +663,16 @@ def main():
     
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
+    skipuntilcountry = 'Australia'
     for p27k, p27v in p27list:
         print('\n','#'*50,'\n',p27k,'\n','#'*50)
+        if skipuntilcountry:
+            if skipuntilcountry == p27k:
+                skipuntilcountry = ''
+            else:
+                print('Skiping...')
+                continue
+        
         #url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Fsitelink%20WHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A' + p27v + '.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20%3Fitem%20wdt%3AP18%20%3Fimage.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20%3Fsitelink%20schema%3Aabout%20%3Fitem.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20%7D%0A%7D'
         url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Fsitelink%20WHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A' + p27v + '.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20%3Fsitelink%20schema%3Aabout%20%3Fitem.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20%7D%0A%7D'
         print(url)
@@ -685,6 +693,11 @@ def main():
             nombre = 'itemLabel' in result and result['itemLabel']['value'] or ''
             country = 'countryLabel' in result and result['countryLabel']['value'] or ''
             sexo = 'sexLabel' in result and result['sexLabel']['value'] or ''
+            if sexo:
+                if sexo == 'femenino' or sexo.startswith('mujer'): #mujer transgenero Q1052281
+                    sexo = 'femenino'
+                else:
+                    sexo = 'masculino'
             lnac = 'birthplaceLabel' in result and result['birthplaceLabel']['value'] or ''
             fnac = 'birthdate' in result and result['birthdate']['value'] or ''
             lfal = 'deathplaceLabel' in result and result['deathplaceLabel']['value'] or ''

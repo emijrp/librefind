@@ -663,8 +663,9 @@ def main():
     
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
-    skipuntilcountry = 'Australia'
+    skipuntilcountry = ''
     for p27k, p27v in p27list:
+        subtotalbios = 0
         print('\n','#'*50,'\n',p27k,'\n','#'*50)
         if skipuntilcountry:
             if skipuntilcountry == p27k:
@@ -673,166 +674,187 @@ def main():
                 print('Skiping...')
                 continue
         
-        #url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Fsitelink%20WHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A' + p27v + '.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20%3Fitem%20wdt%3AP18%20%3Fimage.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20%3Fsitelink%20schema%3Aabout%20%3Fitem.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20%7D%0A%7D'
-        url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Fsitelink%20WHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A' + p27v + '.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20%3Fsitelink%20schema%3Aabout%20%3Fitem.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20%7D%0A%7D'
-        print(url)
-        url = '%s&format=json' % (url)
-        
-        req = urllib.request.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
-        sparql = urllib.request.urlopen(req).read().strip().decode('utf-8')
-        sparql = '%s ]\n  }\n}' % (', {\n      "item" : {'.join(sparql.split(', {\n      "item" : {')[:-1]))
-        #print(sparql)
-        try:
-            json1 = json.loads(sparql)
-        except:
-            print('Error downloading SPARQL? Skiping')
-            continue
-        bios = {}
-        for result in json1['results']['bindings']:
-            q = 'item' in result and result['item']['value'].split('/entity/')[1] or ''
-            nombre = 'itemLabel' in result and result['itemLabel']['value'] or ''
-            country = 'countryLabel' in result and result['countryLabel']['value'] or ''
-            sexo = 'sexLabel' in result and result['sexLabel']['value'] or ''
-            if sexo:
-                if sexo == 'femenino' or sexo.startswith('mujer'): #mujer transgenero Q1052281
-                    sexo = 'femenino'
+        for minyear, maxyear in [[1, 1700], [1700, 1800], [1800, 1850], [1850, 1900], [1900, 1920], [1920, 1940], [1940, 1950], [1950, 1960], [1960, 1970], [1970, 1980]]:
+            print('From %s to %s' % (minyear, maxyear))
+            #url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Fsitelink%20WHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A' + p27v + '.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20%3Fitem%20wdt%3AP18%20%3Fimage.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20%3Fsitelink%20schema%3Aabout%20%3Fitem.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20%7D%0A%7D'
+            #url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Fsitelink%20WHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A' + p27v + '.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20%3Fsitelink%20schema%3Aabout%20%3Fitem.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20%7D%0A%7D'
+            url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A'+p27v+'.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3E%3D%20'+str(minyear)+')%20.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3C%20'+str(maxyear)+')%20.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20%3Fitem%20wdt%3AP18%20%3Fimage.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%20%7D%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%2Cfr%2Cpt%2Cit%2Cde%2Cca%22%20%7D%0A%7D'
+            """
+            SELECT DISTINCT ?item ?itemLabel ?countryLabel ?sexLabel
+                ?birthplaceLabel ?birthdate ?deathplaceLabel ?deathdate 
+                ?occupationLabel ?image ?commonscat ?website 
+            WHERE {
+              ?item wdt:P31 wd:Q5.
+              ?item wdt:P27 wd:Q38.
+              ?item wdt:P27 ?country.
+              ?item wdt:P21 ?sex.
+              ?item wdt:P19 ?birthplace.
+              ?item wdt:P569 ?birthdate.
+              FILTER (year(?birthdate) >= 1900) .
+              FILTER (year(?birthdate) < 1920) .
+              OPTIONAL { ?item wdt:P20 ?deathplace. }
+              OPTIONAL { ?item wdt:P570 ?deathdate. }
+              ?item wdt:P106 ?occupation.
+              ?item wdt:P18 ?image.
+              OPTIONAL { ?item wdt:P373 ?commonscat. }
+              OPTIONAL { ?item wdt:P856 ?website. }
+              FILTER NOT EXISTS { ?wfr schema:about ?item . ?wfr schema:inLanguage "es" }
+              SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en,fr,pt,it,de,ca" }
+            }
+            """
+            #print(url)
+            url = '%s&format=json' % (url)
+            
+            time.sleep(1)
+            req = urllib.request.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
+            sparql = urllib.request.urlopen(req).read().strip().decode('utf-8')
+            sparql = '%s ]\n  }\n}' % (', {\n      "item" : {'.join(sparql.split(', {\n      "item" : {')[:-1]))
+            #print(sparql)
+            try:
+                json1 = json.loads(sparql)
+            except:
+                print('Error downloading SPARQL? Skiping\n')
+                continue
+            bios = {}
+            for result in json1['results']['bindings']:
+                q = 'item' in result and result['item']['value'].split('/entity/')[1] or ''
+                nombre = 'itemLabel' in result and result['itemLabel']['value'] or ''
+                country = 'countryLabel' in result and result['countryLabel']['value'] or ''
+                sexo = 'sexLabel' in result and result['sexLabel']['value'] or ''
+                if sexo:
+                    if sexo == 'femenino' or sexo.startswith('mujer'): #mujer transgenero Q1052281
+                        sexo = 'femenino'
+                    else:
+                        sexo = 'masculino'
+                lnac = 'birthplaceLabel' in result and result['birthplaceLabel']['value'] or ''
+                fnac = 'birthdate' in result and result['birthdate']['value'] or ''
+                lfal = 'deathplaceLabel' in result and result['deathplaceLabel']['value'] or ''
+                ffal = 'deathdate' in result and result['deathdate']['value'] or ''
+                ocup = 'occupationLabel' in result and result['occupationLabel']['value'] or ''
+                image = 'image' in result and urllib.parse.unquote(result['image']['value']).split('/Special:FilePath/')[1] or ''
+                commonscat = 'commonscat' in result and result['commonscat']['value'] or ''
+                if commonscat:
+                    commonscat = 'Category:%s' % (commonscat)
+                website = 'website' in result and result['website']['value'] or ''
+                
+                """
+                if sexo == 'femenino': # para ver ocupaciones femeninas y traducirlas en el dict
+                    print(ocup)
+                    continue
+                """
+                
+                if q in bios:
+                    for x, y in [[country, 'countries'], [image, 'images'], [ocup, 'ocups'], [website, 'websites']]:
+                        if x and x not in bios[q][y]:
+                            bios[q][y].append(x)
+                            bios[q][y].sort()
                 else:
-                    sexo = 'masculino'
-            lnac = 'birthplaceLabel' in result and result['birthplaceLabel']['value'] or ''
-            fnac = 'birthdate' in result and result['birthdate']['value'] or ''
-            lfal = 'deathplaceLabel' in result and result['deathplaceLabel']['value'] or ''
-            ffal = 'deathdate' in result and result['deathdate']['value'] or ''
-            ocup = 'occupationLabel' in result and result['occupationLabel']['value'] or ''
-            image = 'image' in result and urllib.parse.unquote(result['image']['value']).split('/Special:FilePath/')[1] or ''
-            commonscat = 'commonscat' in result and result['commonscat']['value'] or ''
-            if commonscat:
-                commonscat = 'Category:%s' % (commonscat)
-            website = 'website' in result and result['website']['value'] or ''
-            sitelink = 'sitelink' in result and result['sitelink']['value'] or ''
-            if '.wikipedia.' in sitelink:
-                sitelink = '%s:%s' % (sitelink.split('://')[1].split('.')[0], urllib.parse.unquote(sitelink.split('/wiki/')[1]))
-            else:
-                sitelink = ''
+                    bios[q] = {
+                        'q': q, 'nombre': nombre, 'countries': [country], 'sexo': sexo, 'lnac': lnac, 'fnac': fnac, 'lfal': lfal, 'ffal': ffal, 'ocups': [ocup], 'images': [image], 'commonscat': commonscat, 'websites': [website], 
+                    }
             
-            """
-            if sexo == 'femenino': # para ver ocupaciones femeninas y traducirlas en el dict
-                print(ocup)
-                continue
-            """
+            bios_list = [[props['nombre'], q, props] for q, props in bios.items()]
+            bios_list.sort()
+            print('Encontradas %s bios\n' % (len(bios_list)))
+            totalbios += len(bios_list)
+            subtotalbios += len(bios_list)
+            continue
             
-            if q in bios:
-                for x, y in [[country, 'countries'], [image, 'images'], [ocup, 'ocups'], [website, 'websites'], [sitelink, 'sitelinks']]:
-                    if x and x not in bios[q][y]:
-                        bios[q][y].append(x)
-                        bios[q][y].sort()
-            else:
-                bios[q] = {
-                    'q': q, 'nombre': nombre, 'countries': [country], 'sexo': sexo, 'lnac': lnac, 'fnac': fnac, 'lfal': lfal, 'ffal': ffal, 'ocups': [ocup], 'images': [image], 'commonscat': commonscat, 'websites': [website], 'sitelinks': [sitelink], 
-                }
-        
-        bios_list = [[props['nombre'], q, props] for q, props in bios.items()]
-        bios_list.sort()
-        print('Encontradas %s bios' % (len(bios_list)))
-        totalbios += len(bios_list)
-        #continue
-        
-        for nombre, q, props in bios_list:
-            print('\n', '#'*10, props['nombre'], '#'*10, '\n')
-            if re.search(r'(?im)^Q\d', nombre):
-                print('Error, nombre indefinido, saltamos')
-                continue
-            if not props['ocups']:
-                print('Error, sin ocupacion, saltamos')
-                continue
-            if len(props['countries']) > 1:
-                print('Mas de una nacionalidad, saltamos')
-                continue
-            images = props['images']
-            if '' in images:
-                images.remove('')
-            if not images:
-                print('No hay imagen, saltamos')
-                continue
-            
-            #remove unuseful ocups
-            ocups = []
-            for ocup in props['ocups']:
-                ocup2 = '%s de' % (ocup)
-                if not ocup2 in ', '.join(props['ocups']):
-                    ocups.append(ocup)
-            
-            #intro
-            if props['ffal']: #fallecido ya
-                intro = 'fue'
-            else: #vivo
-                intro = 'es'
-            
-            if 'sexo' in props and props['sexo'] == 'femenino': #mujer
-                skipbio = False
-                for ocup in ocups:
-                    if ocup not in ocupfem:
-                        skipbio = True #skip this bio, we have not female translation for this ocupation
-                if skipbio:
+            for nombre, q, props in bios_list:
+                print('\n', '#'*10, props['nombre'], '#'*10, '\n')
+                if re.search(r'(?im)^Q\d', nombre):
+                    print('Error, nombre indefinido, saltamos')
+                    continue
+                if not props['ocups']:
+                    print('Error, sin ocupacion, saltamos')
+                    continue
+                if len(props['countries']) > 1:
+                    print('Mas de una nacionalidad, saltamos')
+                    continue
+                images = props['images']
+                if '' in images:
+                    images.remove('')
+                if not images:
+                    print('No hay imagen, saltamos')
                     continue
                 
-                intro = '%s una %s' % (intro, ', '.join([ocupfem[x] for x in ocups[:-1]]))
-                if len(ocups) > 1:
-                    if ocupfem[ocups[-1]].lower().startswith('i'):
-                        intro = '%s e %s' % (intro, ocupfem[ocups[-1]])
+                #remove unuseful ocups
+                ocups = []
+                for ocup in props['ocups']:
+                    ocup2 = '%s de' % (ocup)
+                    if not ocup2 in ', '.join(props['ocups']):
+                        ocups.append(ocup)
+                
+                #intro
+                if props['ffal']: #fallecido ya
+                    intro = 'fue'
+                else: #vivo
+                    intro = 'es'
+                
+                if 'sexo' in props and props['sexo'] == 'femenino': #mujer
+                    skipbio = False
+                    for ocup in ocups:
+                        if ocup not in ocupfem:
+                            skipbio = True #skip this bio, we have not female translation for this ocupation
+                    if skipbio:
+                        continue
+                    
+                    intro = '%s una %s' % (intro, ', '.join([ocupfem[x] for x in ocups[:-1]]))
+                    if len(ocups) > 1:
+                        if ocupfem[ocups[-1]].lower().startswith('i'):
+                            intro = '%s e %s' % (intro, ocupfem[ocups[-1]])
+                        else:
+                            intro = '%s y %s' % (intro, ocupfem[ocups[-1]])
                     else:
-                        intro = '%s y %s' % (intro, ocupfem[ocups[-1]])
-                else:
-                    intro = '%s%s' % (intro, ocupfem[ocups[-1]])
-                intro = '%s %s' % (intro, country2nationality[props['countries'][0]][props['sexo']])
-            else: #hombre
-                intro = '%s un %s' % (intro, ', '.join(ocups[:-1]))
-                if len(ocups) > 1:
-                    if ocups[-1].lower().startswith('i'):
-                        intro = '%s e %s' % (intro, ocups[-1])
+                        intro = '%s%s' % (intro, ocupfem[ocups[-1]])
+                    intro = '%s %s' % (intro, country2nationality[props['countries'][0]][props['sexo']])
+                else: #hombre
+                    intro = '%s un %s' % (intro, ', '.join(ocups[:-1]))
+                    if len(ocups) > 1:
+                        if ocups[-1].lower().startswith('i'):
+                            intro = '%s e %s' % (intro, ocups[-1])
+                        else:
+                            intro = '%s y %s' % (intro, ocups[-1])
                     else:
-                        intro = '%s y %s' % (intro, ocups[-1])
-                else:
-                    intro = '%s%s' % (intro, ocups[-1])
-                intro = '%s %s' % (intro, country2nationality[props['countries'][0]][props['sexo']])
-            
-            websites = ''.join(["{{Website\n|title=Web oficial\n|url=%s\n|level=0\n}}" % (x) for x in props['websites']])
-            gallery = ''.join(["{{Gallery file\n|filename=%s\n}}" % (x) for x in images])
-            birthdeath = '[[%s]], %s' % (props['lnac'], convertirfecha(props['fnac']))
-            if props['lfal'] and props['ffal']:
-                birthdeath = '%s - %s, %s' % (birthdeath, props['lfal'] == props['lnac'] and 'íbidem' or '[[%s]]' % (props['lfal']), convertirfecha(props['ffal']))
-            if '' in props['sitelinks']:
-                props['sitelinks'].remove('')
-            sitelinks = '; '.join(props['sitelinks'])
-            output = """{{Infobox Result2
+                        intro = '%s%s' % (intro, ocups[-1])
+                    intro = '%s %s' % (intro, country2nationality[props['countries'][0]][props['sexo']])
+                
+                websites = ''.join(["{{Website\n|title=Web oficial\n|url=%s\n|level=0\n}}" % (x) for x in props['websites']])
+                gallery = ''.join(["{{Gallery file\n|filename=%s\n}}" % (x) for x in images])
+                birthdeath = '[[%s]], %s' % (props['lnac'], convertirfecha(props['fnac']))
+                if props['lfal'] and props['ffal']:
+                    birthdeath = '%s - %s, %s' % (birthdeath, props['lfal'] == props['lnac'] and 'íbidem' or '[[%s]]' % (props['lfal']), convertirfecha(props['ffal']))
+
+                output = """{{Infobox Result2
 |search=%s
-|introduction=[[{{FULLPAGENAME}}|%s]] (%s) %s.
-|wikipedia=%s
+|introduction={{selflink|%s}} (%s) %s.
 |commons=%s
 |wikidata=%s
 |websites=%s
 |gallery=%s
-}}""" % (props['nombre'], props['nombre'], birthdeath, intro, sitelinks, props['commonscat'], props['q'], websites, gallery)
-            
-            try:
-                time.sleep(1)
-                #page = pywikibot.Page(site, '%s (%s)' % (props['nombre'], props['q']))
-                page = pywikibot.Page(site, props['nombre'])
-                if page.exists():
-                    if page.text != output:
-                        pywikibot.showDiff(page.text, output)
-                        page.text = output
-                        page.save('BOT - Actualizando página de resultados')
+}}""" % (props['nombre'], props['nombre'], birthdeath, intro, props['commonscat'], props['q'], websites, gallery)
+                
+                try:
+                    time.sleep(1)
+                    #page = pywikibot.Page(site, '%s (%s)' % (props['nombre'], props['q']))
+                    page = pywikibot.Page(site, props['nombre'])
+                    if page.exists():
+                        if page.text != output:
+                            pywikibot.showDiff(page.text, output)
+                            page.text = output
+                            page.save('BOT - Actualizando página de resultados')
+                        else:
+                            print('No changes needed')
                     else:
-                        print('No changes needed')
-                else:
-                    pywikibot.showDiff('', output)
-                    page.text = output
-                    page.save('BOT - Creando página de resultados')
-            except:
-                print('Error while saving, waiting some seconds and skiping')
-                time.sleep(10)
-    
-    print('Total bios %s' % (totalbios))
+                        pywikibot.showDiff('', output)
+                        page.text = output
+                        page.save('BOT - Creando página de resultados')
+                except:
+                    print('Error while saving, waiting some seconds and skiping')
+                    time.sleep(10)
+        
+        print('Subtotal bios %s\n' % (subtotalbios))
+    print('\nTotal bios %s' % (totalbios))
 
 if __name__ == '__main__':
     main()

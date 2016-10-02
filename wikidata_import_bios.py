@@ -16,6 +16,7 @@
 
 import datetime
 import json
+import re
 import time
 import urllib
 import urllib.request
@@ -148,7 +149,7 @@ def main():
         'Mauricio': 'Q1027', 
         'Mauritania': 'Q1025', 
         'México': 'Q96', 
-        'Micronesia': 'Q702', 
+        #'Micronesia': 'Q702', 
         'Moldavia': 'Q217', 
         'Mónaco': 'Q235', 
         'Mongolia': 'Q711', 
@@ -164,7 +165,6 @@ def main():
         'Nueva Zelanda': 'Q664', 
         'Omán': 'Q842', 
         'Países Bajos': 'Q55', 
-        'Países Bajos': 'Q29999', 
         'Pakistán': 'Q843', 
         'Palaos': 'Q695', 
         'Panamá': 'Q804', 
@@ -240,6 +240,7 @@ def main():
         'Alemania': {'masculino': 'alemán', 'femenino': 'alemana' }, 
         'Andorra': {'masculino': 'andorrano', 'femenino': 'andorrana' }, 
         'Angola': {'masculino': 'angoleño', 'femenino': 'angoleña' }, 
+        'Antigua y Barbuda': {'masculino': 'antiguano', 'femenino': 'antiguana' }, 
         'Arabia Saudita': {'saudí': 'alemán', 'femenino': 'saudí' }, 
         'Argelia': {'masculino': 'argelino', 'femenino': 'argelina' }, 
         'Argentina': {'masculino': 'argentino', 'femenino': 'argentina' }, 
@@ -247,18 +248,190 @@ def main():
         'Australia': {'masculino': 'australiano', 'femenino': 'australiana' }, 
         'Austria': {'masculino': 'austríaco', 'femenino': 'austríaca' }, 
         'Azerbaiyán': {'masculino': 'azerbaiyano', 'femenino': 'azerbaiyana' }, 
-        
+        'Bahamas': {'masculino': 'bahameño', 'femenino': 'bahameña' }, 
+        'Bangladés': {'masculino': 'bangladesí', 'femenino': 'bangladesí' }, 
+        'Barbados': {'masculino': 'barbadense', 'femenino': 'barbadense' }, 
+        'Baréin': {'masculino': 'bareiní', 'femenino': 'bareiní' }, 
+        'Bélgica': {'masculino': 'belga', 'femenino': 'belga' }, 
+        'Belice': {'masculino': 'beliceño', 'femenino': 'beliceña' }, 
+        'Benín': {'masculino': 'beninés', 'femenino': 'beninesa' }, 
+        'Bielorrusia': {'masculino': 'bielorruso', 'femenino': 'bielorrusa' }, 
+        'Birmania': {'masculino': 'birmano', 'femenino': 'birmana' }, 
+        'Bolivia': {'masculino': 'boliviano', 'femenino': 'boliviana' }, 
+        'Bosnia y Herzegovina': {'masculino': 'bosnio', 'femenino': 'bosnia' }, 
+        'Botsuana': {'masculino': 'botsuano', 'femenino': 'botsuana' }, 
+        'Brasil': {'masculino': 'brasileño', 'femenino': 'brasileña' }, 
+        'Brunéi': {'masculino': 'bruneano', 'femenino': 'bruneana' }, 
+        'Bulgaria': {'masculino': 'búlgaro', 'femenino': 'búlgara' }, 
+        'Burkina Faso': {'masculino': 'burkinés', 'femenino': 'burkinesa' }, 
+        'Burundi': {'masculino': 'burundés', 'femenino': 'burundesa' }, 
+        'Bután': {'masculino': 'butanés', 'femenino': 'butanesa' }, 
+        'Cabo Verde': {'masculino': 'caboverdiano', 'femenino': 'caboverdiana' }, 
+        'Camboya': {'masculino': 'camboyano', 'femenino': 'camboyana' }, 
+        'Camerún': {'masculino': 'camerunés', 'femenino': 'camerunesa' }, 
+        'Canadá': {'masculino': 'canadiense', 'femenino': 'canadiense' }, 
+        'Catar': {'masculino': 'catarí', 'femenino': 'catarí' }, 
+        'Chad': {'masculino': 'chadiano', 'femenino': 'chadiana' }, 
+        'Chile': {'masculino': 'chileno', 'femenino': 'chilena' }, 
+        'Chipre': {'masculino': 'chipriota', 'femenino': 'chipriota' }, 
+        'Ciudad del Vaticano': {'masculino': 'vaticano', 'femenino': 'vaticana' }, 
+        'Colombia': {'masculino': 'colombiano', 'femenino': 'colombiana' }, 
+        'Comoras': {'masculino': 'comorense', 'femenino': 'comorense' }, 
+        'Corea del Norte': {'masculino': 'norcoreano', 'femenino': 'norcoreana' }, 
+        'Corea del Sur': {'masculino': 'surcoreano', 'femenino': 'surcoreana' }, 
+        'Costa de Marfil': {'masculino': 'marfileño', 'femenino': 'marfileña' }, 
+        'Costa Rica': {'masculino': 'costarricense', 'femenino': 'costarricense' }, 
+        'Croacia': {'masculino': 'croata', 'femenino': 'croata' }, 
+        'Cuba': {'masculino': 'cubano', 'femenino': 'cubana' }, 
+        'Dinamarca': {'masculino': 'danés', 'femenino': 'danesa' }, 
+        'Dominica': {'masculino': 'dominiqués', 'femenino': 'dominiquesa' }, 
+        'Ecuador': {'masculino': 'ecuatoriano', 'femenino': 'ecuatoriana' }, 
+        'Egipto': {'masculino': 'egipcio', 'femenino': 'egipcia' }, 
+        'El Salvador': {'masculino': 'salvadoreño', 'femenino': 'salvadoreña' }, 
+        'Emiratos Árabes Unidos': {'masculino': 'emiratí', 'femenino': 'emiratí' }, 
+        'Eritrea': {'masculino': 'eritreo', 'femenino': 'eritrea' }, 
+        'Eslovaquia': {'masculino': 'eslovaco', 'femenino': 'eslovaca' }, 
+        'Eslovenia': {'masculino': 'esloveno', 'femenino': 'eslovena' }, 
         'España': {'masculino': 'español', 'femenino': 'española' }, 
-        
+        'Estados Unidos': {'masculino': 'estadounidense', 'femenino': 'estadounidense' }, 
+        'Estonia': {'masculino': 'estonio', 'femenino': 'estonia' }, 
+        'Etiopía': {'masculino': 'etíope', 'femenino': 'etíope' }, 
+        'Filipinas': {'masculino': 'filipino', 'femenino': 'filipina' }, 
+        'Finlandia': {'masculino': 'finlandés', 'femenino': 'finlandesa' }, 
+        'Fiyi': {'masculino': 'fiyiano', 'femenino': 'fiyiana' }, 
         'Francia': {'masculino': 'francés', 'femenino': 'francesa' }, 
-        
+        'Gabón': {'masculino': 'gabonés', 'femenino': 'gabonesa' }, 
+        'Gambia': {'masculino': 'gambiano', 'femenino': 'gambiana' }, 
+        'Georgia': {'masculino': 'georgiano', 'femenino': 'georgiana' }, 
+        'Ghana': {'masculino': 'ghanés', 'femenino': 'ghanesa' }, 
+        'Granada': {'masculino': 'granadino', 'femenino': 'granadina' }, 
+        'Grecia': {'masculino': 'griego', 'femenino': 'griega' }, 
+        'Guatemala': {'masculino': 'guatemalteco', 'femenino': 'guatemalteca' }, 
+        'Guinea': {'masculino': 'guineano', 'femenino': 'guineana' }, 
+        'Guinea Ecuatorial': {'masculino': 'ecuatoguineano', 'femenino': 'ecuatoguineana' }, 
+        'Guinea-Bisáu': {'masculino': 'guineano', 'femenino': 'guineana' }, 
+        'Guyana': {'masculino': 'guyanés', 'femenino': 'guyanesa' }, 
+        'Haití': {'masculino': 'haitiano', 'femenino': 'haitiana' }, 
+        'Honduras': {'masculino': 'hondureño', 'femenino': 'hondureña' }, 
+        'Hungría': {'masculino': 'húngaro', 'femenino': 'húngara' }, 
+        'India': {'masculino': 'indio', 'femenino': 'india' }, 
+        'Indonesia': {'masculino': 'indonesio', 'femenino': 'indonesia' }, 
+        'Irak': {'masculino': 'iraquí', 'femenino': 'iraquí' }, 
+        'Irán': {'masculino': 'iraní', 'femenino': 'iraní' }, 
+        'Irlanda': {'masculino': 'irlandés', 'femenino': 'irlandesa' }, 
+        'Islandia': {'masculino': 'islandés', 'femenino': 'islandesa' }, 
+        'Islas Marshall': {'masculino': 'marshalés', 'femenino': 'marshalesa' }, 
+        'Islas Salomón': {'masculino': 'salomonense', 'femenino': 'salomonense' }, 
+        'Israel': {'masculino': 'israelí', 'femenino': 'israelí' }, 
         'Italia': {'masculino': 'italiano', 'femenino': 'italiana' }, 
-        
+        'Jamaica': {'masculino': 'jamaicano', 'femenino': 'jamaicana' }, 
+        'Japón': {'masculino': 'japonés', 'femenino': 'japonesa' }, 
+        'Jordania': {'masculino': 'jordano', 'femenino': 'jordana' }, 
+        'Kazajistán': {'masculino': 'kazajo', 'femenino': 'kazaja' }, 
+        'Kenia': {'masculino': 'keniano', 'femenino': 'keniana' }, 
+        'Kirguistán': {'masculino': 'kirguís', 'femenino': 'kirguís' }, 
+        'Kiribati': {'masculino': 'kiribatiano', 'femenino': 'kiribatiana' }, 
+        'Kosovo': {'masculino': 'kosovar', 'femenino': 'kosovar' }, 
+        'Kuwait': {'masculino': 'kuwaití', 'femenino': 'kuwaití' }, 
+        'Laos': {'masculino': 'laosiano', 'femenino': 'laosiana' }, 
+        'Lesoto': {'masculino': 'lesotense', 'femenino': 'lesotense' }, 
+        'Letonia': {'masculino': 'letón', 'femenino': 'letona' }, 
+        'Líbano': {'masculino': 'libanés', 'femenino': 'libanesa' }, 
+        'Liberia': {'masculino': 'liberiano', 'femenino': 'liberiana' }, 
+        'Libia': {'masculino': 'libio', 'femenino': 'libia' }, 
+        'Liechtenstein': {'masculino': 'liechtensteiniano', 'femenino': 'liechtensteiniana' }, 
+        'Lituania': {'masculino': 'lituano', 'femenino': 'lituana' }, 
+        'Luxemburgo': {'masculino': 'luxemburgués', 'femenino': 'luxemburguesa' }, 
+        'Madagascar': {'masculino': 'malgache', 'femenino': 'malgache' }, 
+        'Malasia': {'masculino': 'malasio', 'femenino': 'malasia' }, 
+        'Malaui': {'masculino': 'malauí', 'femenino': 'malauí' }, 
+        'Maldivas': {'masculino': 'malivo', 'femenino': 'maldiva' }, 
+        'Malí': {'masculino': 'maliense', 'femenino': 'maliense' }, 
+        'Malta': {'masculino': 'maltés', 'femenino': 'maltesa' }, 
+        'Marruecos': {'masculino': 'marroquí', 'femenino': 'marroquí' }, 
+        'Mauricio': {'masculino': 'mauriciano', 'femenino': 'mauriciana' }, 
+        'Mauritania': {'masculino': 'mauritano', 'femenino': 'mauritana' }, 
+        'México': {'masculino': 'mexicano', 'femenino': 'mexicana' }, 
+        #'Micronesia': {'masculino': '', 'femenino': '' }, 
+        'Moldavia': {'masculino': 'moldavo', 'femenino': 'moldava' }, 
+        'Mónaco': {'masculino': 'monegasco', 'femenino': 'monegasca' }, 
+        'Mongolia': {'masculino': 'mongol', 'femenino': 'mongola' }, 
+        'Montenegro': {'masculino': 'montenegrino', 'femenino': 'montenegrina' }, 
+        'Mozambique': {'masculino': 'mozambiqueño', 'femenino': 'mozambiqueña' }, 
+        'Namibia': {'masculino': 'namibio', 'femenino': 'namibia' }, 
+        'Nauru': {'masculino': 'nauruano', 'femenino': 'nauruana' }, 
+        'Nepal': {'masculino': 'nepalés', 'femenino': 'nepalesa' }, 
+        'Nicaragua': {'masculino': 'nicaragüense', 'femenino': 'nicaragüense' }, 
+        'Níger': {'masculino': 'nigerino', 'femenino': 'nigerina' }, 
+        'Nigeria': {'masculino': 'nigeriano', 'femenino': 'nigeriana' }, 
         'Noruega': {'masculino': 'noruego', 'femenino': 'noruega' }, 
-        
-        'Portugal': {'masculino': 'portugués', 'femenino': 'portuguesa' }, 
-        
+        'Nueva Zelanda': {'masculino': 'neozelandés', 'femenino': 'neozelandesa' }, 
+        'Omán': {'masculino': 'omaní', 'femenino': 'omaní' }, 
+        'Países Bajos': {'masculino': 'neerlandés', 'femenino': 'neerlandesa' }, 
+        'Pakistán': {'masculino': 'pakistaní', 'femenino': 'pakistaní' }, 
+        'Palaos': {'masculino': 'palauano', 'femenino': 'palauana' }, 
+        'Panamá': {'masculino': 'panameño', 'femenino': 'panameña' }, 
+        'Papúa Nueva Guinea': {'masculino': 'papú', 'femenino': 'papú' }, 
+        'Paraguay': {'masculino': 'paraguayo', 'femenino': 'paraguaya' }, 
+        'Perú': {'masculino': 'peruano', 'femenino': 'peruana' }, 
+        'Polonia': {'masculino': 'polaco', 'femenino': 'polaca' }, 
+        'Portugal': {'masculino': 'portugués', 'femenino': 'portugesa' }, 
+        'Reino Unido': {'masculino': 'británico', 'femenino': 'británica' }, 
+        'República Árabe Saharaui Democrática': {'masculino': 'saharaui', 'femenino': 'saharaui' }, 
+        'República Centroafricana': {'masculino': 'centroafricano', 'femenino': 'centroafricana' }, 
+        'República Checa': {'masculino': 'checo', 'femenino': 'checa' }, 
+        'República de China': {'masculino': 'taiwanés', 'femenino': 'taiwanesa' }, 
+        'República de Macedonia': {'masculino': 'macedonio', 'femenino': 'macedonia' }, 
+        'República del Congo': {'masculino': 'congoleño', 'femenino': 'congoleña' }, 
+        'República Democrática del Congo': {'masculino': 'congoleño', 'femenino': 'congoleña' }, 
+        'República Dominicana': {'masculino': 'dominicano', 'femenino': 'dominicana' }, 
+        'República Popular China': {'masculino': 'chino', 'femenino': 'china' }, 
+        'Ruanda': {'masculino': 'ruandés', 'femenino': 'ruandesa' }, 
+        'Rumania': {'masculino': 'rumano', 'femenino': 'rumana' }, 
         'Rusia': {'masculino': 'ruso', 'femenino': 'rusa' }, 
+        'Samoa': {'masculino': 'samoano', 'femenino': 'samoana' }, 
+        'San Cristóbal y Nieves': {'masculino': 'sancristobaleño', 'femenino': 'sancristobaleña' }, 
+        'San Marino': {'masculino': 'sanmarinense', 'femenino': 'sanmarinense' }, 
+        'San Vicente y las Granadinas': {'masculino': 'sanvicentino', 'femenino': 'sanvicentina' }, 
+        'Santa Lucía': {'masculino': 'santalucense', 'femenino': 'santalucense' }, 
+        'Santo Tomé y Príncipe': {'masculino': 'santotomense', 'femenino': 'santotomense' }, 
+        'Senegal': {'masculino': 'senegalés', 'femenino': 'senegalesa' }, 
+        'Serbia': {'masculino': 'serbio', 'femenino': 'serbia' }, 
+        'Seychelles': {'masculino': 'seychellense', 'femenino': 'seychellense' }, 
+        'Sierra Leona': {'masculino': 'sierraleonés', 'femenino': 'sierraleonesa' }, 
+        'Singapur': {'masculino': 'singpurense', 'femenino': 'singpurense' }, 
+        'Siria': {'masculino': 'sirio', 'femenino': 'siria' }, 
+        'Somalia': {'masculino': 'somalí', 'femenino': 'somalí' }, 
+        'Sri Lanka': {'masculino': 'ceilanés', 'femenino': 'ceilanesa' }, 
+        'Suazilandia': {'masculino': 'suazi', 'femenino': 'suazi' }, 
+        'Sudáfrica': {'masculino': 'sudafricano', 'femenino': 'sudafricana' }, 
+        'Sudán': {'masculino': 'sudanés', 'femenino': 'sudanesa' }, 
+        'Sudán del Sur': {'masculino': 'sursudanés', 'femenino': 'sursudanés' }, 
+        'Suecia': {'masculino': 'sueco', 'femenino': 'sueca' }, 
+        'Suiza': {'masculino': 'suizo', 'femenino': 'suiza' }, 
+        'Surinam': {'masculino': 'surinamés', 'femenino': 'surinamesa' }, 
+        'Tailandia': {'masculino': 'tailandés', 'femenino': 'tailandesa' }, 
+        'Tanzania': {'masculino': 'tanzano', 'femenino': 'tanzana' }, 
+        'Tayikistán': {'masculino': 'tayiko', 'femenino': 'tayika' }, 
+        'Timor Oriental': {'masculino': 'timorense', 'femenino': 'timorense' }, 
+        'Togo': {'masculino': 'togolés', 'femenino': 'togolesa' }, 
+        'Tonga': {'masculino': 'tongano', 'femenino': 'tongana' }, 
+        'Trinidad y Tobago': {'masculino': 'trinitense', 'femenino': 'trinitense' }, 
+        'Túnez': {'masculino': 'tunecino', 'femenino': 'tunecina' }, 
+        'Turkmenistán': {'masculino': 'turcomano', 'femenino': 'turcomana' }, 
+        'Turquía': {'masculino': 'turco', 'femenino': 'turca' }, 
+        'Tuvalu': {'masculino': 'tuvaluano', 'femenino': 'tuvaluana' }, 
+        'Ucrania': {'masculino': 'ucraniano', 'femenino': 'ucraniana' }, 
+        'Uganda': {'masculino': 'ugandés', 'femenino': 'ugandesa' }, 
+        'Uruguay': {'masculino': 'uruguayo', 'femenino': 'uruguaya' }, 
+        'Uzbekistán': {'masculino': 'uzbeko', 'femenino': 'uzbeka' }, 
+        'Vanuatu': {'masculino': 'vanuatuense', 'femenino': 'vanuatuense' }, 
+        'Venezuela': {'masculino': 'venezolano', 'femenino': 'venezolana' }, 
+        'Vietnam': {'masculino': 'vietnamita', 'femenino': 'vietnamita' }, 
+        'Yemen': {'masculino': 'yemení', 'femenino': 'yemení' }, 
+        'Yibuti': {'masculino': 'yibutiano', 'femenino': 'yibutiana' }, 
+        'Zambia': {'masculino': 'zambiano', 'femenino': 'zambiana' }, 
+        'Zimbabue': {'masculino': 'zimbabuense', 'femenino': 'zimbabuense' }, 
     }
     ocupfem = {
         'abogado': 'abogada', 
@@ -501,7 +674,11 @@ def main():
         sparql = urllib.request.urlopen(req).read().strip().decode('utf-8')
         sparql = '%s ]\n  }\n}' % (', {\n      "item" : {'.join(sparql.split(', {\n      "item" : {')[:-1]))
         #print(sparql)
-        json1 = json.loads(sparql)
+        try:
+            json1 = json.loads(sparql)
+        except:
+            print('Error downloading SPARQL? Skiping')
+            continue
         bios = {}
         for result in json1['results']['bindings']:
             q = 'item' in result and result['item']['value'].split('/entity/')[1] or ''
@@ -524,10 +701,11 @@ def main():
             else:
                 sitelink = ''
             
-            if sexo == 'femenino':
-                #print(ocup)
-                #continue
-                pass
+            """
+            if sexo == 'femenino': # para ver ocupaciones femeninas y traducirlas en el dict
+                print(ocup)
+                continue
+            """
             
             if q in bios:
                 for x, y in [[country, 'countries'], [image, 'images'], [ocup, 'ocups'], [website, 'websites'], [sitelink, 'sitelinks']]:
@@ -546,7 +724,7 @@ def main():
         #continue
         
         for nombre, q, props in bios_list:
-            print(nombre, props['ocups'])
+            print('\n', '#'*10, props['nombre'], '#'*10, '\n')
             if re.search(r'(?im)^Q\d', nombre):
                 print('Error, nombre indefinido, saltamos')
                 continue
@@ -621,17 +799,25 @@ def main():
 |websites=%s
 |gallery=%s
 }}""" % (props['nombre'], props['nombre'], birthdeath, intro, sitelinks, props['commonscat'], props['q'], websites, gallery)
-            print('\n', '#'*10, props['nombre'], '#'*10, '\n')
-            print(output)
+            
             try:
                 time.sleep(1)
                 #page = pywikibot.Page(site, '%s (%s)' % (props['nombre'], props['q']))
                 page = pywikibot.Page(site, props['nombre'])
-                page.text = output
-                page.save('BOT - Creando página de resultados')
+                if page.exists():
+                    if page.text != output:
+                        pywikibot.showDiff(page.text, output)
+                        page.text = output
+                        page.save('BOT - Actualizando página de resultados')
+                    else:
+                        print('No changes needed')
+                else:
+                    pywikibot.showDiff('', output)
+                    page.text = output
+                    page.save('BOT - Creando página de resultados')
             except:
+                print('Error while saving, waiting some seconds and skiping')
                 time.sleep(10)
-                pass
     
     print('Total bios %s' % (totalbios))
 

@@ -666,7 +666,7 @@ def main():
     skipuntilcountry = ''
     for p27k, p27v in p27list:
         subtotalbios = 0
-        print('\n','#'*50,'\n',p27k,'\n','#'*50)
+        print('\n','#'*50,'\n',p27k,p27v,'\n','#'*50)
         if skipuntilcountry:
             if skipuntilcountry == p27k:
                 skipuntilcountry = ''
@@ -674,11 +674,11 @@ def main():
                 print('Skiping...')
                 continue
         
-        for minyear, maxyear in [[1, 1700], [1700, 1800], [1800, 1850], [1850, 1900], [1900, 1920], [1920, 1940], [1940, 1950], [1950, 1960], [1960, 1970], [1970, 1980]]:
+        for minyear, maxyear in [[1, 1700], [1700, 1800], [1800, 1850], [1850, 1900], [1900, 1920], [1920, 1940], [1940, 1950], [1950, 1960], [1960, 1970], [1970, 1980], [1980, 1990]]:
             print('From %s to %s' % (minyear, maxyear))
             #url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Fsitelink%20WHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A' + p27v + '.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20%3Fitem%20wdt%3AP18%20%3Fimage.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20%3Fsitelink%20schema%3Aabout%20%3Fitem.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20%7D%0A%7D'
             #url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Fsitelink%20WHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A' + p27v + '.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20%3Fsitelink%20schema%3Aabout%20%3Fitem.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20%7D%0A%7D'
-            url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A'+p27v+'.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3E%3D%20'+str(minyear)+')%20.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3C%20'+str(maxyear)+')%20.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20%3Fitem%20wdt%3AP18%20%3Fimage.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%20%7D%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%2Cfr%2Cpt%2Cit%2Cde%2Cca%22%20%7D%0A%7D'
+            url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3FoccupationLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A'+p27v+'.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3E%3D%20'+str(minyear)+')%20.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3C%20'+str(maxyear)+')%20.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20%3Fitem%20wdt%3AP18%20%3Fimage.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%23OPTIONAL%20%7B%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%20%7D%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%2Cfr%2Cpt%2Cit%2Cde%2Cca%22%20%7D%0A%7D' # %23 delante de OPTIONAL website para q no descarte las q no tienen web
             """
             SELECT DISTINCT ?item ?itemLabel ?countryLabel ?sexLabel
                 ?birthplaceLabel ?birthdate ?deathplaceLabel ?deathdate 
@@ -758,7 +758,7 @@ def main():
             print('Encontradas %s bios\n' % (len(bios_list)))
             totalbios += len(bios_list)
             subtotalbios += len(bios_list)
-            continue
+            #continue
             
             for nombre, q, props in bios_list:
                 print('\n', '#'*10, props['nombre'], '#'*10, '\n')
@@ -777,6 +777,12 @@ def main():
                 if not images:
                     print('No hay imagen, saltamos')
                     continue
+                websites = props['websites']
+                if '' in websites:
+                    websites.remove('')
+                if not websites:
+                    print('No hay website, saltamos')
+                    #continue
                 
                 #remove unuseful ocups
                 ocups = []
@@ -801,7 +807,7 @@ def main():
                     
                     intro = '%s una %s' % (intro, ', '.join([ocupfem[x] for x in ocups[:-1]]))
                     if len(ocups) > 1:
-                        if ocupfem[ocups[-1]].lower().startswith('i'):
+                        if ocupfem[ocups[-1]].lower().startswith('i') or ocupfem[ocups[-1]].lower().startswith('hi'):
                             intro = '%s e %s' % (intro, ocupfem[ocups[-1]])
                         else:
                             intro = '%s y %s' % (intro, ocupfem[ocups[-1]])
@@ -811,7 +817,7 @@ def main():
                 else: #hombre
                     intro = '%s un %s' % (intro, ', '.join(ocups[:-1]))
                     if len(ocups) > 1:
-                        if ocups[-1].lower().startswith('i'):
+                        if ocups[-1].lower().startswith('i') or ocups[-1].lower().startswith('hi'):
                             intro = '%s e %s' % (intro, ocups[-1])
                         else:
                             intro = '%s y %s' % (intro, ocups[-1])
@@ -819,7 +825,7 @@ def main():
                         intro = '%s%s' % (intro, ocups[-1])
                     intro = '%s %s' % (intro, country2nationality[props['countries'][0]][props['sexo']])
                 
-                websites = ''.join(["{{Website\n|title=Web oficial\n|url=%s\n|level=0\n}}" % (x) for x in props['websites']])
+                websites = ''.join(["{{Website\n|title=Web oficial\n|url=%s\n|level=0\n}}" % (x) for x in websites])
                 gallery = ''.join(["{{Gallery file\n|filename=%s\n}}" % (x) for x in images])
                 birthdeath = '[[%s]], %s' % (props['lnac'], convertirfecha(props['fnac']))
                 if props['lfal'] and props['ffal']:
@@ -827,12 +833,9 @@ def main():
 
                 output = """{{Infobox Result2
 |search=%s
-|introduction={{selflink|%s}} (%s) %s.
-|commons=%s
-|wikidata=%s
-|websites=%s
-|gallery=%s
-}}""" % (props['nombre'], props['nombre'], birthdeath, intro, props['commonscat'], props['q'], websites, gallery)
+|introduction={{selflink|%s}} (%s) %s.%s
+|wikidata=%s%s%s
+}}""" % (props['nombre'], props['nombre'], birthdeath, intro, props['commonscat'] and '\n|commons=%s' % (props['commonscat']) or '', props['q'], websites and '\n|websites=%s' % (websites) or '', gallery and '\n|gallery=%s' % (gallery) or '')
                 
                 try:
                     time.sleep(1)

@@ -744,8 +744,6 @@ def main():
             
             bios = {}
             for result in json1['results']['bindings']:
-                if result['itemLabel']['value'] == 'Mahmud Tarzi':
-                    print(result)
                 q = 'item' in result and result['item']['value'].split('/entity/')[1] or ''
                 nombre = 'itemLabel' in result and result['itemLabel']['value'] or ''
                 country = 'countryLabel' in result and result['countryLabel']['value'] or ''
@@ -778,13 +776,13 @@ def main():
                 """
                 
                 if q in bios:
-                    for x, y in [[country, 'countries'], [image, 'images'], [website, 'websites']]:
+                    for x, y in [[country, 'countries'], [lnac, 'lnac'], [lfal, 'lfal'], [image, 'images'], [website, 'websites']]:
                         if x and x not in bios[q][y]:
                             bios[q][y].append(x)
                             bios[q][y].sort()
                 else:
                     bios[q] = {
-                        'q': q, 'nombre': nombre, 'countries': [country], 'sexo': sexo, 'lnac': lnac, 'fnac': fnac, 'lfal': lfal, 'ffal': ffal, 'ocups': ocups2, 'images': [image], 'commonscat': commonscat, 'websites': [website], 
+                        'q': q, 'nombre': nombre, 'countries': [country], 'sexo': sexo, 'lnac': [lnac], 'fnac': fnac, 'lfal': [lfal], 'ffal': ffal, 'ocups': ocups2, 'images': [image], 'commonscat': commonscat, 'websites': [website], 
                     }
             
             bios_list = [[props['nombre'], q, props] for q, props in bios.items()]
@@ -808,10 +806,18 @@ def main():
                 if len(props['countries']) > 1:
                     print('Mas de una nacionalidad, saltamos')
                     continue
+                #quizas mas adelante interese meter los 2 o los niveles q haya en wikidata?
+                if len(props['lnac']) > 1:
+                    print('Mas de un lugar de nacimiento, saltamos')
+                    continue
+                if len(props['lfal']) > 1:
+                    print('Mas de un lugar de fallecimiento, saltamos')
+                    continue
+                #fin quizas
                 images = props['images']
                 if '' in images:
                     images.remove('')
-                if not images:
+                if not images and (not 'commonscat' in props) and ('commonscat' in props and not props['commonscat']):
                     print('No hay imagen, saltamos')
                     continue
                 websites = props['websites']
@@ -849,9 +855,9 @@ def main():
                     ['nombre', props['nombre']], 
                     ['sexo', props['sexo']], 
                     ['fecha de nacimiento', props['fnac']], 
-                    ['lugar de nacimiento', props['lnac']], 
+                    ['lugar de nacimiento', ', '.join(props['lnac'])], 
                     ['fecha de fallecimiento', props['ffal']], 
-                    ['lugar de fallecimiento', props['lfal']], 
+                    ['lugar de fallecimiento', ', '.join(props['lfal'])], 
                     ['nacionalidad', ', '.join([country2nationality[x][props['sexo']] for x in props['countries']])], 
                     ['ocupación', ', '.join(ocups)], 
                 ]

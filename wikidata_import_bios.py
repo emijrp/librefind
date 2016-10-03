@@ -691,7 +691,7 @@ def main():
         
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
-    skipuntilcountry = ''
+    skipuntilcountry = 'Francia'
     for p27k, p27v in p27list:
         subtotalbios = 0
         print('\n','#'*50,'\n',p27k,p27v,'\n','#'*50)
@@ -784,13 +784,13 @@ def main():
                 """
                 
                 if q in bios:
-                    for x, y in [[country, 'countries'], [lnac, 'lnac'], [lfal, 'lfal'], [image, 'images'], [website, 'websites']]:
+                    for x, y in [[country, 'countries'], [sexo, 'sexo'], [lnac, 'lnac'], [fnac, 'fnac'], [lfal, 'lfal'], [ffal, 'ffal'], [image, 'images'], [commonscat, 'commonscat'], [website, 'websites']]:
                         if x and x not in bios[q][y]:
                             bios[q][y].append(x)
                             bios[q][y].sort()
                 else:
                     bios[q] = {
-                        'q': q, 'nombre': nombre, 'countries': [country], 'sexo': sexo, 'lnac': [lnac], 'fnac': fnac, 'lfal': [lfal], 'ffal': ffal, 'ocups': ocups2, 'images': [image], 'commonscat': commonscat, 'websites': [website], 
+                        'q': q, 'nombre': nombre, 'countries': [country], 'sexo': [sexo], 'lnac': [lnac], 'fnac': [fnac], 'lfal': [lfal], 'ffal': [ffal], 'ocups': ocups2, 'images': [image], 'commonscat': [commonscat], 'websites': [website], 
                     }
             
             bios_list = [[props['nombre'], q, props] for q, props in bios.items()]
@@ -805,6 +805,9 @@ def main():
                 if re.search(r'(?im)^Q\d', nombre):
                     print('Error, nombre indefinido, saltamos')
                     continue
+                if len(props['sexo']) > 1:
+                    print('Mas de un sexo, saltamos')
+                    continue
                 ocups = props['ocups']
                 if '' in ocups:
                     ocups.remove('')
@@ -813,6 +816,12 @@ def main():
                     continue
                 if len(props['countries']) > 1:
                     print('Mas de una nacionalidad, saltamos')
+                    continue
+                if len(props['fnac']) > 1:
+                    print('Mas de una fecha de nacimiento, saltamos')
+                    continue
+                if len(props['ffal']) > 1:
+                    print('Mas de una fecha de fallecimiento, saltamos')
                     continue
                 #quizas mas adelante interese meter los 2 o los niveles q haya en wikidata?
                 if len(props['lnac']) > 1:
@@ -825,7 +834,10 @@ def main():
                 images = props['images']
                 if '' in images:
                     images.remove('')
-                if not images and ('commonscat' in props and not props['commonscat']):
+                commonscat = props['commonscat']
+                if '' in commonscat:
+                    commonscat.remove('')
+                if not images and not props['commonscat']:
                     print('No hay imagen, saltamos')
                     continue
                 websites = props['websites']
@@ -845,7 +857,7 @@ def main():
                 ocups.sort()
                 
                 skipbio = False
-                if 'sexo' in props and props['sexo'] == 'femenino':
+                if 'sexo' in props and props['sexo'][0] == 'femenino':
                     missingfemaleocups = []
                     for ocup in ocups:
                         if ocup not in ocupfem:
@@ -861,12 +873,12 @@ def main():
                 properties_list = [
                     ['Clase', 'persona'], 
                     ['Nombre', props['nombre']], 
-                    ['Sexo', props['sexo']], 
-                    ['Fecha de nacimiento', props['fnac']], 
+                    ['Sexo', ', '.join(props['sexo'])], 
+                    ['Fecha de nacimiento', ', '.join(props['fnac'])], 
                     ['Lugar de nacimiento', ', '.join(props['lnac'])], 
-                    ['Fecha de fallecimiento', props['ffal']], 
+                    ['Fecha de fallecimiento', ', '.join(props['ffal'])], 
                     ['Lugar de fallecimiento', ', '.join(props['lfal'])], 
-                    ['Nacionalidad', ', '.join([country2nationality[x][props['sexo']] for x in props['countries']])], 
+                    ['Nacionalidad', ', '.join([country2nationality[x][props['sexo'][0]] for x in props['countries']])], 
                     ['Ocupación', ', '.join(ocups)], 
                 ]
                 
@@ -880,10 +892,10 @@ def main():
                 output = """{{Infobox Result2
 |search=%s%s
 |wikidata=%s%s%s%s
-}}""" % (props['nombre'], props['commonscat'] and '\n|commons=%s' % (props['commonscat']) or '', props['q'], websites and '\n|websites=%s' % (websites) or '', gallery and '\n|gallery=%s' % (gallery) or '', properties and '\n|properties=%s' % (properties) or '')
+}}""" % (props['nombre'], props['commonscat'] and '\n|commons=%s' % (props['commonscat'][0]) or '', props['q'], websites and '\n|websites=%s' % (websites) or '', gallery and '\n|gallery=%s' % (gallery) or '', properties and '\n|properties=%s' % (properties) or '')
                 
                 try:
-                    time.sleep(1)
+                    #time.sleep(1)
                     #page = pywikibot.Page(site, '%s (%s)' % (props['nombre'], props['q']))
                     page = pywikibot.Page(site, props['nombre'])
                     if page.exists():

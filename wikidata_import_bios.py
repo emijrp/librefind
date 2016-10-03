@@ -830,6 +830,16 @@ def main():
                 ocups = ocups2
                 ocups.sort()
                 
+                skipbio = False
+                if 'sexo' in props and props['sexo'] == 'femenino':
+                    for ocup in ocups:
+                        if ocup not in ocupfem:
+                            skipbio = True #skip this bio, we have not female translation for this ocupation
+                            break
+                    if skipbio:
+                        continue
+                    ocups = [ocupfem[x] for x in ocups]
+                
                 properties_list = [
                     ['clase', 'persona'], 
                     ['nombre', props['nombre']], 

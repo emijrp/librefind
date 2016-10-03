@@ -729,7 +729,7 @@ def main():
             time.sleep(1)
             req = urllib.request.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
             sparql = urllib.request.urlopen(req).read().strip().decode('utf-8')
-            print(sparql)
+            #print(sparql)
             
             if sparql:
                 #sparql = '%s ]\n  }\n}' % (', {\n      "item" : {'.join(sparql.split(', {\n      "item" : {')[:-1]))
@@ -830,40 +830,6 @@ def main():
                 ocups = ocups2
                 ocups.sort()
                 
-                #intro
-                if props['ffal']: #fallecido ya
-                    intro = 'fue'
-                else: #vivo
-                    intro = 'es'
-                
-                if 'sexo' in props and props['sexo'] == 'femenino': #mujer
-                    skipbio = False
-                    for ocup in ocups:
-                        if ocup not in ocupfem:
-                            skipbio = True #skip this bio, we have not female translation for this ocupation
-                    if skipbio:
-                        continue
-                    
-                    intro = '%s una %s' % (intro, ', '.join([ocupfem[x] for x in ocups[:-1]]))
-                    if len(ocups) > 1:
-                        if ocupfem[ocups[-1]].lower().startswith('i') or ocupfem[ocups[-1]].lower().startswith('hi'):
-                            intro = '%s e %s' % (intro, ocupfem[ocups[-1]])
-                        else:
-                            intro = '%s y %s' % (intro, ocupfem[ocups[-1]])
-                    else:
-                        intro = '%s%s' % (intro, ocupfem[ocups[-1]])
-                    intro = '%s %s' % (intro, country2nationality[props['countries'][0]][props['sexo']])
-                else: #hombre
-                    intro = '%s un %s' % (intro, ', '.join(ocups[:-1]))
-                    if len(ocups) > 1:
-                        if ocups[-1].lower().startswith('i') or ocups[-1].lower().startswith('hi'):
-                            intro = '%s e %s' % (intro, ocups[-1])
-                        else:
-                            intro = '%s y %s' % (intro, ocups[-1])
-                    else:
-                        intro = '%s%s' % (intro, ocups[-1])
-                    intro = '%s %s' % (intro, country2nationality[props['countries'][0]][props['sexo']])
-                
                 properties_list = [
                     ['clase', 'persona'], 
                     ['nombre', props['nombre']], 
@@ -872,23 +838,18 @@ def main():
                     ['lugar de nacimiento', props['lnac']], 
                     ['fecha de fallecimiento', props['ffal']], 
                     ['lugar de fallecimiento', props['lfal']], 
-                    ['nacionalidad', ', '.join(props['countries'])], 
+                    ['nacionalidad', ', '.join([country2nationality[x][props['sexo']] for x in props['countries']])], 
                     ['ocupación', ', '.join(ocups)], 
                 ]
                 
                 gallery = ''.join(["{{Gallery file\n|filename=%s\n}}" % (x) for x in images])
                 websites = ''.join(["{{Website\n|title=Web oficial\n|url=%s\n|level=0\n}}" % (x) for x in websites])
                 properties = ''.join(["{{Property\n|property=%s\n|value=%s\n}}" % (x, y) for x, y in properties_list])
-                
-                birthdeath = '[[%s]], %s' % (props['lnac'], convertirfecha(props['fnac']))
-                if props['lfal'] and props['ffal']:
-                    birthdeath = '%s - %s, %s' % (birthdeath, props['lfal'] == props['lnac'] and 'íbidem' or '[[%s]]' % (props['lfal']), convertirfecha(props['ffal']))
 
                 output = """{{Infobox Result2
-|search=%s
-|introduction={{selflink|%s}} (%s) %s.%s
+|search=%s%s
 |wikidata=%s%s%s%s
-}}""" % (props['nombre'], props['nombre'], birthdeath, intro, props['commonscat'] and '\n|commons=%s' % (props['commonscat']) or '', props['q'], websites and '\n|websites=%s' % (websites) or '', gallery and '\n|gallery=%s' % (gallery) or '', properties and '\n|properties=%s' % (properties) or '')
+}}""" % (props['nombre'], props['commonscat'] and '\n|commons=%s' % (props['commonscat']) or '', props['q'], websites and '\n|websites=%s' % (websites) or '', gallery and '\n|gallery=%s' % (gallery) or '', properties and '\n|properties=%s' % (properties) or '')
                 
                 try:
                     time.sleep(1)

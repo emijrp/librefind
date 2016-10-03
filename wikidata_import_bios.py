@@ -832,11 +832,15 @@ def main():
                 
                 skipbio = False
                 if 'sexo' in props and props['sexo'] == 'femenino':
+                    missingfemaleocups = []
                     for ocup in ocups:
                         if ocup not in ocupfem:
+                            missingfemaleocups.append(ocup)
                             skipbio = True #skip this bio, we have not female translation for this ocupation
-                            break
                     if skipbio:
+                        print('Falta traduccion femenina para:', ', '.join(missingfemaleocups))
+                        with open('missing-female-ocups.txt', 'a') as logfile:
+                            logfile.write('%s\n' % ('\n'.join(missingfemaleocups)))
                         continue
                     ocups = [ocupfem[x] for x in ocups]
                 
@@ -854,7 +858,10 @@ def main():
                 
                 gallery = ''.join(["{{Gallery file\n|filename=%s\n}}" % (x) for x in images])
                 websites = ''.join(["{{Website\n|title=Web oficial\n|url=%s\n|level=0\n}}" % (x) for x in websites])
-                properties = ''.join(["{{Property\n|property=%s\n|value=%s\n}}" % (x, y) for x, y in properties_list])
+                properties = ''
+                for pname, pvalue in properties_list:
+                    if pvalue:
+                        properties += "{{Property\n|property=%s\n|value=%s\n}}" % (pname, pvalue)
 
                 output = """{{Infobox Result2
 |search=%s%s

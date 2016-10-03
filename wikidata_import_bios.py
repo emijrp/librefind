@@ -817,7 +817,7 @@ def main():
                 images = props['images']
                 if '' in images:
                     images.remove('')
-                if not images and (not 'commonscat' in props) and ('commonscat' in props and not props['commonscat']):
+                if not images and ('commonscat' in props and not props['commonscat']):
                     print('No hay imagen, saltamos')
                     continue
                 websites = props['websites']

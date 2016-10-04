@@ -474,6 +474,7 @@ def main():
         'acordeonista': 'acordeonista', 
         'activista': 'activista', 
         'actor': 'actriz', 
+        'actor de cine': 'actriz de cine', 
         'actor de doblaje': 'actriz de doblaje', 
         'actor de teatro': 'actriz de teatro', 
         'actor de teatro musical': 'actriz de teatro musical', 
@@ -641,7 +642,7 @@ def main():
         'humorista': 'humorista', 
         'humorista gráfico': 'humorista gráfico', 
         'ilustrador': 'ilustradora', 
-        'informático teórico': 'informática teórico', 
+        'informático teórico': 'informática teórica', 
         'ingeniero': 'ingeniera', 
         'ingeniero de software': 'ingeniera de software', 
         'ingeniero de sonido': 'ingeniera de sonido', 
@@ -786,7 +787,8 @@ def main():
     
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
-    skipuntilcountry = ''
+    skipuntilcountry = 'Alemania'
+    skipbios = []
     for p27k, p27v in p27list:
         subtotalbios = 0
         print('\n','#'*50,'\n',p27k,p27v,'\n','#'*50)
@@ -797,35 +799,35 @@ def main():
                 print('Skiping...')
                 continue
         
-        for minyear, maxyear in [[1, 1700], [1700, 1800], [1800, 1850], [1850, 1900], [1900, 1920], [1920, 1940], [1940, 1950], [1950, 1960], [1960, 1970], [1970, 1980], [1980, 1990]]:
+        for minyear, maxyear in [[1, 1500], [1500, 1600], [1600, 1700], [1700, 1800], [1800, 1850], [1850, 1900], [1900, 1920], [1920, 1930], [1930, 1940], [1940, 1950], [1950, 1960], [1960, 1970], [1970, 1980], [1980, 1990]]:
             print('\nFrom %s to %s' % (minyear, maxyear))
-            url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20(GROUP_CONCAT(%3Foccupation%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Foccupations)%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A'+p27v+'.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3E%3D%20'+str(minyear)+')%20.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3C%20'+str(maxyear)+')%20.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%2Cpt%2Cit%2Cfr%2Cde%22%20%7D%0A%7D%0AGROUP%20BY%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%20%20%20%20%20%20%20%20%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%20%20%20%20%20%20%20%20%20%3Fimage%20%3Fcommonscat%20%3Fwebsite'
+            url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A(GROUP_CONCAT(%3Foccupation%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Foccupations)%0A%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A'+p27v+'.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3E%3D%20'+str(minyear)+')%20.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3C%20'+str(maxyear)+')%20.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%20%7D%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%2Cca%2Cpt%2Cit%2Cfr%2Cde%22%20%7D%0A%7D%0AGROUP%20BY%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%3Fimage%20%3Fcommonscat%20%3Fwebsite%20'
             """
-            SELECT DISTINCT ?item ?itemLabel ?countryLabel ?sexLabel
-                ?birthplaceLabel ?birthdate ?deathplaceLabel ?deathdate 
-                (GROUP_CONCAT(?occupation; separator = "; ") AS ?occupations)
-                ?image ?commonscat ?website 
-                WHERE {
-                  ?item wdt:P31 wd:Q5.
-                  ?item wdt:P27 wd:Q889. # Afganistan
-                  ?item wdt:P27 ?country.
-                  ?item wdt:P21 ?sex.
-                  ?item wdt:P19 ?birthplace.
-                  ?item wdt:P569 ?birthdate.
-                  FILTER (year(?birthdate) >= 1700) .
-                  FILTER (year(?birthdate) < 1900) .
-                  OPTIONAL { ?item wdt:P20 ?deathplace. }
-                  OPTIONAL { ?item wdt:P570 ?deathdate. }
-                  ?item wdt:P106 ?occupation.
-                  OPTIONAL { ?item wdt:P18 ?image. }
-                  OPTIONAL { ?item wdt:P373 ?commonscat. }
-                  ?item wdt:P856 ?website.
-                  FILTER NOT EXISTS { ?wfr schema:about ?item . ?wfr schema:inLanguage "es" }
-                  SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en,pt,it,fr,de" }
-                }
-                GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
-                         ?birthplaceLabel ?birthdate ?deathplaceLabel ?deathdate 
-                         ?image ?commonscat ?website 
+SELECT DISTINCT ?item ?itemLabel ?countryLabel ?sexLabel
+?birthplaceLabel ?birthdate ?deathplaceLabel ?deathdate 
+(GROUP_CONCAT(?occupation; separator = "; ") AS ?occupations)
+?image ?commonscat ?website 
+WHERE {
+  ?item wdt:P31 wd:Q5.
+  ?item wdt:P27 wd:Q889.
+  ?item wdt:P27 ?country.
+  ?item wdt:P21 ?sex.
+  ?item wdt:P19 ?birthplace.
+  ?item wdt:P569 ?birthdate.
+  FILTER (year(?birthdate) >= 1700) .
+  FILTER (year(?birthdate) < 1900) .
+  OPTIONAL { ?item wdt:P20 ?deathplace. }
+  OPTIONAL { ?item wdt:P570 ?deathdate. }
+  ?item wdt:P106 ?occupation.
+  OPTIONAL { ?item wdt:P18 ?image. }
+  OPTIONAL { ?item wdt:P373 ?commonscat. }
+  OPTIONAL { ?item wdt:P856 ?website. }
+  FILTER NOT EXISTS { ?wfr schema:about ?item . ?wfr schema:inLanguage "es" }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en,ca,pt,it,fr,de" }
+}
+GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
+?birthplaceLabel ?birthdate ?deathplaceLabel ?deathdate 
+?image ?commonscat ?website 
             """
             #print(url)
             url = '%s&format=json' % (url)
@@ -847,6 +849,15 @@ def main():
             bios = {}
             for result in json1['results']['bindings']:
                 q = 'item' in result and result['item']['value'].split('/entity/')[1] or ''
+                
+                #algunas veces puede devolver basura? en algun value (del tipo: t329308714), descartar esas bios
+                for propname in result.keys():
+                    if re.search(r'(?m)^t\d+$', result[propname]['value']):
+                        print('ERROR: la propiedad %s contiene %s. Saltando...' % (propname, result[propname]['value']))
+                        skipbios.append(q)
+                if q in skipbios:
+                    continue
+                
                 nombre = 'itemLabel' in result and result['itemLabel']['value'] or ''
                 country = 'countryLabel' in result and result['countryLabel']['value'] or ''
                 sexo = 'sexLabel' in result and result['sexLabel']['value'] or ''
@@ -950,8 +961,9 @@ def main():
                 if '' in websites:
                     websites.remove('')
                 if not websites:
-                    print('No hay website, saltamos')
-                    continue
+                    pass
+                    #print('No hay website, saltamos')
+                    #continue
                 
                 #remove unuseful ocups
                 ocups2 = []

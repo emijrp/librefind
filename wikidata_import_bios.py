@@ -864,10 +864,10 @@ def main():
                 for ocup in ocups.split('; '): # si hay traduccion al español guardamos, sino quitamos
                     ocupq = ocup.split('/entity/')[1]
                     if ocupq in ocupq2label:
-                        ocups2.append(ocupq2label[ocupq])
+                        ocups2.append(ocupq2label[ocupq].lower())
                     else:
                         print('No hay LABEL para', ocupq, 'en', q, '(', nombre, '). Intentando bajar el label')
-                        templabel = getLabel(q=ocupq)
+                        templabel = getLabel(q=ocupq).lower()
                         if templabel:
                             ocupq2label[ocupq] = templabel
                             ocups2.append(ocupq2label[ocupq])
@@ -974,7 +974,7 @@ def main():
                         with open('missing-female-ocups.txt', 'a') as logfile:
                             logfile.write('%s\n' % ('\n'.join(missingfemaleocups)))
                         continue
-                    ocups = [ocupfem[x] for x in ocups]
+                    ocups = [ocupfem[x].lower() for x in ocups]
                 
                 properties_list = [
                     ['Clase', 'persona'], 

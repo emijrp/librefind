@@ -31,6 +31,41 @@ def convertirfecha(fecha):
     fecha = '%s de %s de %s' % (int(fecha.split('-')[2]), num2month[int(fecha.split('-')[1])], int(fecha.split('-')[0]))
     return fecha
 
+def getLabel(q='', lang='es'):
+    label = ''
+    url = 'https://www.wikidata.org/w/api.php?action=wbgetentities&ids='+q+'&props=labels&languages=es&format=json'
+    raw = getURL(url=url)
+    j = json.loads(raw)
+    if 'entities' in j and \
+       'es' in j['entities'][q]['labels']:
+        label = j['entities'][q]['labels']['es']['value']
+    return label
+
+def getOcupationLabels():
+    #load occupations Q
+    url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20%3Fitem%20%3FitemLabel%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ28640.%0A%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%22%20%7D%0A%7D&format=json'
+    sparql = getURL(url=url)
+    #sparql = '%s ]\n  }\n}' % (', {\n      "item" : {'.join(sparql.split(', {\n      "item" : {')[:-1]))
+    #print(sparql)
+    try:
+        json1 = json.loads(sparql)
+    except:
+        print('Error downloading SPARQL? Skiping\n')
+        sys.exit()
+    ocupq2label = {}
+    for result in json1['results']['bindings']:
+        q = 'item' in result and result['item']['value'].split('/entity/')[1] or ''
+        occupationlabel = 'itemLabel' in result and result['itemLabel']['value'] or ''
+        if q and not re.search(r'(?im)^Q\d', occupationlabel):
+            ocupq2label[q] = occupationlabel
+    return ocupq2label
+
+def getURL(url=''):
+    raw = ''
+    req = urllib.request.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
+    raw = urllib.request.urlopen(req).read().strip().decode('utf-8')
+    return raw
+
 def main():
     p27 = {
         'Afganistán': 'Q889', 
@@ -233,7 +268,6 @@ def main():
     }
     p27list = [[k, v] for k, v in p27.items()]
     p27list.sort()
-    
     #https://query.wikidata.org/#SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%0AWHERE%20{%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ6256.%0A%20%20SERVICE%20wikibase%3Alabel%20{%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20}%0A}
     country2nationality = {
         'Afganistán': {'masculino': 'afgano', 'femenino': 'afgana' }, 
@@ -434,6 +468,7 @@ def main():
         'Zambia': {'masculino': 'zambiano', 'femenino': 'zambiana' }, 
         'Zimbabue': {'masculino': 'zimbabuense', 'femenino': 'zimbabuense' }, 
     }
+    
     ocupfem = {
         'abogado': 'abogada', 
         'acordeonista': 'acordeonista', 
@@ -745,52 +780,10 @@ def main():
         'yudoca': 'yudoca', 
         'youtuber': 'youtuber', 
     }
-
-    """
-    29 poeta abogado
-      5 playmate
-      5 powerlifter
-      5 Q21500772
-      6 nightclub owner
-      6 romanista
-      7 salonnière
-     10 alumno
-     11 escritor de no ficción
-     11 narrador de audiolibros
-     12 seiyū
-     13 Liedermacher
-     14 activista por los derechos humanos
-     14 contador
-     14 Perito
-     17 yodeler
-     18 snowboarder
-     19 showgirl
-     20 astrólogo
-     20 masajista
-     22 mediador lingüístico
-     24 humanitario
-     24 voluntariado
-    """
     
-    #load occupations Q
-    url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20%3Fitem%20%3FitemLabel%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ28640.%0A%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%22%20%7D%0A%7D&format=json'
-    req = urllib.request.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
-    sparql = urllib.request.urlopen(req).read().strip().decode('utf-8')
-    sparql = '%s ]\n  }\n}' % (', {\n      "item" : {'.join(sparql.split(', {\n      "item" : {')[:-1]))
-    #print(sparql)
-    try:
-        json1 = json.loads(sparql)
-    except:
-        print('Error downloading SPARQL? Skiping\n')
-        sys.exit()
-    ocupq2label = {}
-    for result in json1['results']['bindings']:
-        q = 'item' in result and result['item']['value'].split('/entity/')[1] or ''
-        occupationlabel = 'itemLabel' in result and result['itemLabel']['value'] or ''
-        if q and not re.search(r'(?im)^Q\d', occupationlabel):
-            ocupq2label[q] = occupationlabel
+    ocupq2label = getOcupationLabels()
     print('Loaded %s occupations' % (len(ocupq2label.items())))
-        
+    
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
     skipuntilcountry = ''
@@ -805,7 +798,7 @@ def main():
                 continue
         
         for minyear, maxyear in [[1, 1700], [1700, 1800], [1800, 1850], [1850, 1900], [1900, 1920], [1920, 1940], [1940, 1950], [1950, 1960], [1960, 1970], [1970, 1980], [1980, 1990]]:
-            print('From %s to %s' % (minyear, maxyear))
+            print('\nFrom %s to %s' % (minyear, maxyear))
             url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20(GROUP_CONCAT(%3Foccupation%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Foccupations)%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A'+p27v+'.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3E%3D%20'+str(minyear)+')%20.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3C%20'+str(maxyear)+')%20.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%2Cpt%2Cit%2Cfr%2Cde%22%20%7D%0A%7D%0AGROUP%20BY%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%20%20%20%20%20%20%20%20%20%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%20%20%20%20%20%20%20%20%20%3Fimage%20%3Fcommonscat%20%3Fwebsite'
             """
             SELECT DISTINCT ?item ?itemLabel ?countryLabel ?sexLabel
@@ -837,8 +830,7 @@ def main():
             #print(url)
             url = '%s&format=json' % (url)
             time.sleep(1)
-            req = urllib.request.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
-            sparql = urllib.request.urlopen(req).read().strip().decode('utf-8')
+            sparql = getURL(url=url)
             #print(sparql)
             
             if sparql:
@@ -873,6 +865,13 @@ def main():
                     ocupq = ocup.split('/entity/')[1]
                     if ocupq in ocupq2label:
                         ocups2.append(ocupq2label[ocupq])
+                    else:
+                        print('No hay LABEL para', ocupq, 'en', q, '(', nombre, '). Intentando bajar el label')
+                        templabel = getLabel(q=ocupq)
+                        if templabel:
+                            ocupq2label[ocupq] = templabel
+                            ocups2.append(ocupq2label[ocupq])
+                            print('Encontrado label:', ocupq2label[ocupq])
                 image = 'image' in result and urllib.parse.unquote(result['image']['value']).split('/Special:FilePath/')[1] or ''
                 commonscat = 'commonscat' in result and result['commonscat']['value'] or ''
                 if commonscat:
@@ -886,10 +885,15 @@ def main():
                 """
                 
                 if q in bios:
-                    for x, y in [[country, 'countries'], [sexo, 'sexo'], [lnac, 'lnac'], [fnac, 'fnac'], [lfal, 'lfal'], [ffal, 'ffal'], [image, 'images'], [commonscat, 'commonscat'], [website, 'websites']]:
+                    for x, y in [[country, 'countries'], [sexo, 'sexo'], [lnac, 'lnac'], [fnac, 'fnac'], [lfal, 'lfal'], [ffal, 'ffal'], [image, 'images'], [commonscat, 'commonscat'], [website, 'websites']]: #parametros sencillos
                         if x and x not in bios[q][y]:
                             bios[q][y].append(x)
                             bios[q][y].sort()
+                    for x, y in [[ocups2, 'ocups']]: #parametros group_concat
+                        for xx in x:
+                            if xx and xx not in bios[q][y]:
+                                bios[q][y].append(xx)
+                                bios[q][y].sort()
                 else:
                     bios[q] = {
                         'q': q, 'nombre': nombre, 'countries': [country], 'sexo': [sexo], 'lnac': [lnac], 'fnac': [fnac], 'lfal': [lfal], 'ffal': [ffal], 'ocups': ocups2, 'images': [image], 'commonscat': [commonscat], 'websites': [website], 
@@ -1001,8 +1005,7 @@ def main():
                     #time.sleep(1)
                     # Find page in LibreFind, and move if duplicate name
                     apiquery = 'https://www.librefind.org/w/index.php?title=Especial:Ask&q=[[wikidata%3A%3A'+props['q']+']]&p=format%3Djson'
-                    req = urllib.request.Request(apiquery, headers={ 'User-Agent': 'Mozilla/5.0' })
-                    result = urllib.request.urlopen(req).read().strip().decode('utf-8')
+                    result = getURL(url=apiquery)
                     if result:
                         try:
                             apijson = json.loads(result)

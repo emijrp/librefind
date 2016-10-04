@@ -1011,7 +1011,7 @@ def main():
                             continue
                         #print(apijson)
                         if len(apijson['results'].keys()) == 1:
-                            pagename = apijson['results'].keys()[0]
+                            pagename = list(apijson['results'].keys())[0]
                             #print(pagename)
                         elif len(apijson['results'].keys()) > 1:
                             #pagina duplicada? loguear y gestionar mas adelante
@@ -1034,11 +1034,11 @@ def main():
                                     qamover = qamover[0]
                                 else: #no tiene parametro wikidata? q tipo de pagina es? loguear y saltar
                                     with open('log-sin-q.txt', 'a') as logsinq:
-                                        logsinq.write('%s\n' % (page.title))
+                                        logsinq.write('%s\n' % (page.title()))
                                     continue
-                                page.move('%s (%s)' % (page.title, qamover), reason='BOT - Moviendo para desambiguar en [[%s]]' % (page.title))
+                                page.move('%s (%s)' % (page.title(), qamover), reason='BOT - Moviendo para desambiguar en [[%s]]' % (page.title()))
                                 disambig = pywikibot.Page(site, props['nombre'])
-                                disambig.text = '{{desambiguación}}'
+                                disambig.text = '{{disambiguation}}'
                                 disambig.save('BOT - Creando desambiguación')
                                 pagename = '%s (%s)' % (props['nombre'], props['q'])
                                 

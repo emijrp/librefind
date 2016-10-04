@@ -793,7 +793,7 @@ def main():
         
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
-    skipuntilcountry = 'Francia'
+    skipuntilcountry = ''
     for p27k, p27v in p27list:
         subtotalbios = 0
         print('\n','#'*50,'\n',p27k,p27v,'\n','#'*50)
@@ -996,10 +996,54 @@ def main():
 |wikidata=%s%s%s%s
 }}""" % (props['nombre'], props['commonscat'] and '\n|commons=%s' % (props['commonscat'][0]) or '', props['q'], websites and '\n|websites=%s' % (websites) or '', gallery and '\n|gallery=%s' % (gallery) or '', properties and '\n|properties=%s' % (properties) or '')
                 
+                pagename = ''
                 try:
                     #time.sleep(1)
-                    #page = pywikibot.Page(site, '%s (%s)' % (props['nombre'], props['q']))
-                    page = pywikibot.Page(site, props['nombre'])
+                    # Find page in LibreFind, and move if duplicate name
+                    apiquery = 'https://www.librefind.org/w/index.php?title=Especial:Ask&q=[[wikidata%3A%3A'+props['q']+']]&p=format%3Djson'
+                    req = urllib.request.Request(apiquery, headers={ 'User-Agent': 'Mozilla/5.0' })
+                    result = urllib.request.urlopen(req).read().strip().decode('utf-8')
+                    if result:
+                        try:
+                            apijson = json.loads(result)
+                        except:
+                            print('Error API? Malformatted JSON? Skiping\n')
+                            continue
+                        #print(apijson)
+                        if len(apijson['results'].keys()) == 1:
+                            pagename = apijson['results'].keys()[0]
+                            #print(pagename)
+                        elif len(apijson['results'].keys()) > 1:
+                            #pagina duplicada? loguear y gestionar mas adelante
+                            with open('duplicate-q.txt', 'a') as duplicatelog:
+                                duplicatelog.write('%s\n' % (props['q']))
+                            continue #evitar hasta revisar el log y q este arreglado
+                        else:
+                            pagename = props['nombre']
+                    else: #no existe pagina para este Q todavia, segun la API
+                        #comprobar que el nombre no este ocupado por otra pagina
+                        #en ese caso, mover para desambiguar
+                        pagename = props['nombre']
+                        page = pywikibot.Page(site, pagename)
+                        if page.exists():
+                            if re.search(r'(?im)\{\{\s*(dis|des)', page.text): #desambiguacion? dejamos como esta y generamos nombre con Q
+                                pagename = '%s (%s)' % (props['nombre'], props['q'])
+                            else: #no es desambiguacion, movemos a su Q y creamos desambiguacion
+                                qamover = re.findall('(?im)wikidata\s*=\s*(Q\d+)', page.text)
+                                if qamover:
+                                    qamover = qamover[0]
+                                else: #no tiene parametro wikidata? q tipo de pagina es? loguear y saltar
+                                    with open('log-sin-q.txt', 'a') as logsinq:
+                                        logsinq.write('%s\n' % (page.title))
+                                    continue
+                                page.move('%s (%s)' % (page.title, qamover), reason='BOT - Moviendo para desambiguar en [[%s]]' % (page.title))
+                                disambig = pywikibot.Page(site, props['nombre'])
+                                disambig.text = '{{desambiguación}}'
+                                disambig.save('BOT - Creando desambiguación')
+                                pagename = '%s (%s)' % (props['nombre'], props['q'])
+                                
+                    #guardar la bio
+                    page = pywikibot.Page(site, pagename)
                     if page.exists():
                         if page.text != output:
                             pywikibot.showDiff(page.text, output)

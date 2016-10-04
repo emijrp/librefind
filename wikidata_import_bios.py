@@ -25,6 +25,12 @@ import urllib.parse
 
 import pywikibot
 
+""" TODO
+
+* Que cuando un elemento en wikidata cambie de alias (por ej. si alguien corrige el nombre o lo traduce), el bot renombre la pagina de librefind. Hay algunos "X of Y" de nombres aristocraticos y reyes sin traducir todavia por ejemplo.
+
+"""
+
 def convertirfecha(fecha):
     num2month = {1: 'enero', 2: 'febrero', 3: 'marzo', 4: 'abril', 5: 'mayo', 6: 'junio', 7: 'julio', 8: 'agosto', 9: 'septiembre', 10: 'octubre', 11: 'noviembre', 12: 'diciembre'}
     fecha = fecha.split('T')[0]
@@ -788,6 +794,7 @@ def main():
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
     skipuntilcountry = 'Alemania'
+    skipuntilbio = 'Q139554'
     skipbios = []
     for p27k, p27v in p27list:
         subtotalbios = 0
@@ -796,10 +803,23 @@ def main():
             if skipuntilcountry == p27k:
                 skipuntilcountry = ''
             else:
-                print('Skiping...')
+                print('Skiping until... %s' % (skipuntilcountry))
                 continue
         
-        for minyear, maxyear in [[1, 1500], [1500, 1600], [1600, 1700], [1700, 1800], [1800, 1850], [1850, 1900], [1900, 1920], [1920, 1930], [1930, 1940], [1940, 1950], [1950, 1960], [1960, 1970], [1970, 1980], [1980, 1990]]:
+        yearranges = [[1, 1000], [1000, 1200], [1200, 1300], [1300, 1400], [1400, 1500], [1500, 1550], [1550, 1600]]
+        for yearx in range(1600, 1700):
+            if yearx % 20 == 0:
+                yearranges.append([yearx, yearx+20])
+        for yearx in range(1700, 1800):
+            if yearx % 10 == 0:
+                yearranges.append([yearx, yearx+10])
+        for yearx in range(1800, 1900):
+            if yearx % 5 == 0:
+                yearranges.append([yearx, yearx+5])
+        for yearx in range(1900, 1990):
+            yearranges.append([yearx, yearx+1])
+        
+        for minyear, maxyear in yearranges:
             print('\nFrom %s to %s' % (minyear, maxyear))
             url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A(GROUP_CONCAT(%3Foccupation%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Foccupations)%0A%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A'+p27v+'.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3E%3D%20'+str(minyear)+')%20.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3C%20'+str(maxyear)+')%20.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%20%7D%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%2Cca%2Cpt%2Cit%2Cfr%2Cde%22%20%7D%0A%7D%0AGROUP%20BY%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%3Fimage%20%3Fcommonscat%20%3Fwebsite%20'
             """
@@ -849,6 +869,13 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
             bios = {}
             for result in json1['results']['bindings']:
                 q = 'item' in result and result['item']['value'].split('/entity/')[1] or ''
+                
+                if skipuntilbio:
+                    if skipuntilbio == q:
+                        skipuntilbio = ''
+                    else:
+                        print('Skiping until... %s' % (skipuntilbio))
+                        continue
                 
                 #algunas veces puede devolver basura? en algun value (del tipo: t329308714), descartar esas bios
                 for propname in result.keys():
@@ -919,6 +946,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
             
             for nombre, q, props in bios_list:
                 print('\n', '#'*10, props['nombre'], '#'*10, '\n')
+
                 if re.search(r'(?im)^Q\d', nombre):
                     print('Error, nombre indefinido, saltamos')
                     continue

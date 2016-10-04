@@ -945,7 +945,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
             #continue
             
             for nombre, q, props in bios_list:
-                print('\n', '#'*10, props['nombre'], '#'*10, '\n')
+                print('\n', '#'*10, props['nombre'], q, '#'*10, '\n')
 
                 if re.search(r'(?im)^Q\d', nombre):
                     print('Error, nombre indefinido, saltamos')
@@ -1015,6 +1015,14 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                             logfile.write('%s\n' % ('\n'.join(missingfemaleocups)))
                         continue
                     ocups = [ocupfem[x].lower() for x in ocups]
+                
+                skipbio = False
+                for x in props['countries']:
+                    if not x in country2nationality:
+                        print('ERROR: Falta nacionalidad para %s. Saltamos...' % (x))
+                        skipbio = True
+                if skipbio:
+                    continue
                 
                 properties_list = [
                     ['Clase', 'persona'], 

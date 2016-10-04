@@ -19,6 +19,12 @@ class Family(family.WikimediaFamily):
         self.langs = {
             'librefind': 'www.librefind.org',
         }
+        
+        """self.namespaces = {}
+        self.namespaces[104] = {
+            '_default': 'Blabla',
+        }"""
+        
         # Wikimedia wikis all use "bodyContent" as the id of the <div>
         # element that contains the actual page content; change this for
         # wikis that use something else (e.g., mozilla family)

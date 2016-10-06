@@ -892,8 +892,8 @@ def main():
     
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
-    skipuntilcountry = 'Alemania'
-    skipuntilbio = 'Q2592135'
+    skipuntilcountry = 'Bélgica'
+    skipuntilbio = 'Q21294851'
     skipbios = []
     for p27k, p27v in p27list:
         subtotalbios = 0
@@ -978,7 +978,8 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 
                 #algunas veces puede devolver basura? en algun value (del tipo: t329308714), descartar esas bios
                 for propname in result.keys():
-                    if re.search(r'(?m)^t\d+$', result[propname]['value']):
+                    if re.search(r'(?m)^t\d+$', result[propname]['value']) or \
+                       (propname == 'occupations' and re.search(r't\d+', result[propname]['value'])):
                         print('ERROR: la propiedad %s contiene %s. Saltando...' % (propname, result[propname]['value']))
                         skipbios.append(q)
                 if q in skipbios:

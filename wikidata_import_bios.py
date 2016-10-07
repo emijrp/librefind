@@ -841,6 +841,7 @@ def convertirfecha(fecha):
     return fecha
 
 def getLabel(q='', lang='es'):
+    time.sleep(0.2)
     label = ''
     url = 'https://www.wikidata.org/w/api.php?action=wbgetentities&ids='+q+'&props=labels&languages=es&format=json'
     raw = getURL(url=url)
@@ -889,32 +890,37 @@ def getURL(url=''):
     return raw
 
 def group_unconcat(concat='', labelclass=''):
+    global labels
+    
     unconcat = []
     if concat and labelclass:
         for qurl in concat.split('; '): # si hay traduccion al español guardamos, sino obviamos
             q = qurl.split('/entity/')[1]
             if q in labels[labelclass]:
-                unconcat.append(labels[labelclass][q])
+                if labels[labelclass][q]: # evitar si es vacia, las almacenamos vacias para no hacer getLabel cada vez
+                    unconcat.append(labels[labelclass][q])
             else:
                 print('No hay LABEL para', q, '. Intentando bajar el label')
                 templabel = getLabel(q=q)
-                if templabel:
-                    labels[labelclass][q] = templabel
+                labels[labelclass][q] = templabel # aunque sea vacia la almacenamos, para evitar hacer getLabel otra vez
+                print('Encontrado label:', labels[labelclass][q])
+                print('Ahora hay %s labels de %s en memoria' % (len(labels[labelclass]), labelclass))
+                if labels[labelclass][q]:
                     unconcat.append(labels[labelclass][q])
-                    print('Encontrado label:', labels[labelclass][q])
-                    print('Ahora hay %s labels de %s en memoria' % (len(labels[labelclass]), labelclass))
     unconcat = list(set(unconcat))
     unconcat.sort()
     return unconcat
 
 def main():
+    global labels
+    
     labels['occupations'] = getOccupationLabels()
     labels['occupations'] = labels['occupations'].copy()
     print('Loaded %s occupations' % (len(labels['occupations'].items())))
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
     skipuntilcountry = 'Estonia'
-    skipuntilbio = ''
+    skipuntilbio = 'Q477300'
     skipbios = []
     for p27k, p27v in p27list:
         subtotalbios = 0

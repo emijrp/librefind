@@ -29,6 +29,7 @@ import pywikibot
 
 * Que cuando un elemento en wikidata cambie de alias (por ej. si alguien corrige el nombre o lo traduce), el bot renombre la pagina de librefind. Hay algunos "X of Y" de nombres aristocraticos y reyes sin traducir todavia por ejemplo.
 * Que hacer con las fechas incompletas que devuelven 1 de enero?
+* Algunas imágenes tiene comas ',' en el nombre y se almacenan como varias por el arraymap. Usar otro delimitador ';' para las propiedades? Otra solucion?
 
 """
 
@@ -919,8 +920,8 @@ def main():
     print('Loaded %s occupations' % (len(labels['occupations'].items())))
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
-    skipuntilcountry = 'Estonia'
-    skipuntilbio = 'Q477300'
+    skipuntilcountry = 'Jamaica'
+    skipuntilbio = ''
     skipbios = []
     for p27k, p27v in p27list:
         subtotalbios = 0
@@ -1078,6 +1079,9 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                     print('Mas de un sexo, saltamos')
                     continue
                 
+                countries = props['countries']
+                if '' in countries:
+                    countries.remove('')
                 educatedat = props['educatedat']
                 if '' in educatedat:
                     educatedat.remove('')
@@ -1094,9 +1098,10 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 if not props['occupations']:
                     print('Error, sin ocupacion, saltamos')
                     continue
-                if len(props['countries']) > 1:
-                    print('Mas de una nacionalidad, saltamos')
-                    continue
+                if len(countries) > 1:
+                    pass
+                    #print('Mas de una nacionalidad, saltamos')
+                    #continue
                 if len(props['fnac']) > 1:
                     print('Mas de una fecha de nacimiento, saltamos')
                     continue
@@ -1128,6 +1133,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                     #print('No hay website, saltamos')
                     #continue
                 
+                #start occupations
                 #remove unuseful occupations
                 occupations2 = []
                 for occupation in occupations:
@@ -1137,6 +1143,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 occupations = occupations2.copy()
                 occupations.sort()
                 
+                # femenine translation
                 skipbio = False
                 if 'sexo' in props and props['sexo'][0] == 'femenino':
                     missingfemaleocups = []
@@ -1150,6 +1157,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                             logfile.write('%s\n' % ('\n'.join(missingfemaleocups)))
                         continue
                     occupations = [ocupfem[x] for x in occupations]
+                #end occupations
                 
                 skipbio = False
                 for x in props['countries']:
@@ -1163,11 +1171,12 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                     ['Clase', 'persona'], 
                     ['Nombre', props['nombre']], 
                     ['Sexo', ', '.join(props['sexo'])], 
+                    ['Imagen', images and 'File:%s' % (images[0]) or ''], #only 1 image
                     ['Fecha de nacimiento', ', '.join(props['fnac'])], 
                     ['Lugar de nacimiento', ', '.join(props['lnac'])], 
                     ['Fecha de fallecimiento', ', '.join(props['ffal'])], 
                     ['Lugar de fallecimiento', ', '.join(props['lfal'])], 
-                    ['Nacionalidad', ', '.join([country2nationality[x][props['sexo'][0]] for x in props['countries']])], 
+                    ['Nacionalidad', ', '.join([country2nationality[x][props['sexo'][0]] for x in countries])], 
                     ['Estudiado en', ', '.join(educatedat)], 
                     ['Cargo', ', '.join(positions)], 
                     ['Ocupación', ', '.join(occupations)], 

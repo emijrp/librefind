@@ -316,6 +316,7 @@ country2nationality = {
     'Haití': {'masculino': 'haitiano', 'femenino': 'haitiana' }, 
     'Honduras': {'masculino': 'hondureño', 'femenino': 'hondureña' }, 
     'Hungría': {'masculino': 'húngaro', 'femenino': 'húngara' }, 
+    'Imperio ruso': {'masculino': 'ruso', 'femenino': 'rusa' }, 
     'India': {'masculino': 'indio', 'femenino': 'india' }, 
     'Indonesia': {'masculino': 'indonesio', 'femenino': 'indonesia' }, 
     'Irak': {'masculino': 'iraquí', 'femenino': 'iraquí' }, 
@@ -425,6 +426,7 @@ country2nationality = {
     'Tuvalu': {'masculino': 'tuvaluano', 'femenino': 'tuvaluana' }, 
     'Ucrania': {'masculino': 'ucraniano', 'femenino': 'ucraniana' }, 
     'Uganda': {'masculino': 'ugandés', 'femenino': 'ugandesa' }, 
+    'Unión Soviética': {'masculino': 'soviético', 'femenino': 'soviética' }, 
     'Uruguay': {'masculino': 'uruguayo', 'femenino': 'uruguaya' }, 
     'Uzbekistán': {'masculino': 'uzbeko', 'femenino': 'uzbeka' }, 
     'Vanuatu': {'masculino': 'vanuatuense', 'femenino': 'vanuatuense' }, 
@@ -1042,7 +1044,7 @@ def main():
     print('Loaded %s occupations' % (len(labels['occupations'].items())))
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
-    skipuntilcountry = 'Jamaica'
+    skipuntilcountry = 'Rusia'
     skipuntilbio = ''
     skipbios = []
     for p27k, p27v in p27list:
@@ -1204,6 +1206,11 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 countries = props['countries']
                 if '' in countries:
                     countries.remove('')
+                if 'Rusia' in countries and 'Unión Soviética' in countries: #redundant
+                    countries.remove('Rusia')
+                if 'Rusia' in countries and 'Imperio ruso' in countries: #redundant
+                    countries.remove('Imperio ruso')
+                
                 educatedat = props['educatedat']
                 if '' in educatedat:
                     educatedat.remove('')
@@ -1217,7 +1224,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 if '' in awards:
                     awards.remove('')
                 
-                if not props['occupations']:
+                if not occupations:
                     print('Error, sin ocupacion, saltamos')
                     continue
                 if len(countries) > 1:
@@ -1268,24 +1275,24 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 # femenine translation
                 skipbio = False
                 if 'sexo' in props and props['sexo'][0] == 'femenino':
-                    missingfemaleocups = []
                     for occupation in occupations:
                         if occupation not in ocupfem:
-                            missingfemaleocups.append(occupation)
                             skipbio = True #skip this bio, we have not female translation for this ocupation
+                            print('Falta traduccion femenina para:', occupation)
+                            with open('missing-female-ocups.txt', 'a') as logfile:
+                                logfile.write('%s\n' % (occupation))
                     if skipbio:
-                        print('Falta traduccion femenina para:', ', '.join(missingfemaleocups))
-                        with open('missing-female-ocups.txt', 'a') as logfile:
-                            logfile.write('%s\n' % ('\n'.join(missingfemaleocups)))
                         continue
                     occupations = [ocupfem[x] for x in occupations]
                 #end occupations
                 
                 skipbio = False
-                for x in props['countries']:
-                    if not x in country2nationality:
-                        print('ERROR: Falta nacionalidad para %s. Saltamos...' % (x))
+                for country in countries:
+                    if not country in country2nationality:
                         skipbio = True
+                        print('Falta nacionalidad para:', country)
+                        with open('missing-nationalities.txt', 'a') as logfile:
+                            logfile.write('%s\n' % (country))
                 if skipbio:
                     continue
                 

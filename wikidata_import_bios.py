@@ -1080,7 +1080,7 @@ def main():
     print('Loaded %s occupations' % (len(labels['occupations'].items())))
     site = pywikibot.Site('librefind', 'librefind')
     totalbios = 0
-    skipuntilcountry = 'Rusia'
+    skipuntilcountry = ''
     skipuntilbio = ''
     skipbios = []
     for p27k, p27v in p27list:
@@ -1094,17 +1094,10 @@ def main():
                 continue
         
         yearranges = [[1, 1000], [1000, 1200], [1200, 1300], [1300, 1400], [1400, 1500], [1500, 1550], [1550, 1600]]
-        for yearx in range(1600, 1700):
-            if yearx % 20 == 0:
-                yearranges.append([yearx, yearx+20])
-        for yearx in range(1700, 1800):
-            if yearx % 10 == 0:
-                yearranges.append([yearx, yearx+10])
-        for yearx in range(1800, 1900):
-            if yearx % 5 == 0:
-                yearranges.append([yearx, yearx+5])
-        for yearx in range(1900, 1990):
-            yearranges.append([yearx, yearx+1])
+        for yearstart, yearend, yearstep in [[1600, 1700, 20], [1700, 1800, 10], [1800, 1900, 5], [1900, 1990, 1]]:
+            for yearx in range(yearstart, yearend):
+                if yearx % yearstep == 0:
+                    yearranges.append([yearx, yearx+yearstep])
         
         for minyear, maxyear in yearranges:
             print('\nFrom %s to %s' % (minyear, maxyear))
@@ -1173,11 +1166,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 
                 #algunas veces puede devolver basura? en algun value (del tipo: t329308714), descartar esas bios
                 for propname in result.keys():
-                    if re.search(r'(?m)^t\d+$', result[propname]['value']) or \
-                       (propname == 'educatedat' and re.search(r't\d+', result[propname]['value'])) or \
-                       (propname == 'positions' and re.search(r't\d+', result[propname]['value'])) or \
-                       (propname == 'occupations' and re.search(r't\d+', result[propname]['value'])) or \
-                       (propname == 'awards' and re.search(r't\d+', result[propname]['value'])):
+                    if re.search(r't\d+', result[propname]['value']):
                         print('ERROR: la propiedad %s contiene %s. Saltando...' % (propname, result[propname]['value']))
                         skipbios.append(q)
                 if q in skipbios:
@@ -1243,7 +1232,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 if '' in countries:
                     countries.remove('')
                 if 'Rusia' in countries and 'Unión Soviética' in countries: #redundant
-                    countries.remove('Rusia')
+                    countries.remove('Unión Soviética')
                 if 'Rusia' in countries and 'Imperio ruso' in countries: #redundant
                     countries.remove('Imperio ruso')
                 

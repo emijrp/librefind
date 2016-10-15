@@ -25,7 +25,8 @@ def main():
     global ocupaciones_list
     
     site = pywikibot.Site('librefind', 'librefind')
-    skipuntilcountry = 'Austria'
+    skipuntilcountry = ''
+    skipuntilocup = ''
     for pais, nacprops in nacionalidades_list:
         if skipuntilcountry:
             if skipuntilcountry == pais:
@@ -35,6 +36,13 @@ def main():
                 continue
         
         for ocupacion, ocuprops in ocupaciones_list:
+            if skipuntilocup:
+                if skipuntilocup == ocupacion:
+                    skipuntilocup = ''
+                else:
+                    print('Skiping until... %s' % (skipuntilocup))
+                    continue
+            
             print(pais, ocupacion)
             query = '[[clase%3A%3Apersona]][[ocupaci%C3%B3n%3A%3A' + urllib.parse.quote(ocuprops['ms']) + '||' + urllib.parse.quote(ocuprops['fs']) + ']][[nacionalidad%3A%3A' + urllib.parse.quote(nacprops['ms']) +'||' + urllib.parse.quote(nacprops['fs']) +']]&p=format%3Dbroadtable%2Flink%3Dall%2Fheaders%3Dshow&eq=no'
             url = 'https://www.librefind.org/w/index.php?title=Especial:Ask&q=' + query
@@ -57,7 +65,14 @@ def main():
 |nacionalidad femenino plural=%s
 }}""" % (ocuprops['ms'], ocuprops['fs'], ocuprops['mp'], ocuprops['fp'], nacprops['ms'], nacprops['fs'], nacprops['mp'], nacprops['fp'])
                 page.text = output
-                page.save('BOT - Creando página de resultados')
+                try:
+                    page.save('BOT - Creando página de resultados')
+                    redtitle = '%s %s' % (ocuprops['ms'], nacprops['ms'])
+                    redpage = pywikibot.Page(site, redtitle)
+                    redpage.text = '#REDIRECT [[%s]]' % (title)
+                    redpage.save('BOT - Creando redirección')
+                except:
+                    print('Error guardando pagina')
 
 if __name__ == '__main__':
     main()

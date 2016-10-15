@@ -14,19 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""poner una tabla sin imagenes en las paginas tambien, debajo de la galeria para q salgan todos los resultados
-
+"""
 tambien se podrian crear listas de "futbolistas madrileños/sevillanos..." en funcion del lugar de nacimiento. Probar primero con los paises y luego ya iremos viendo
 
-todos los fix q corrija, corregirlo en el script tb para q en la siguiente pasada traduzca bien las ocupaciones femeninas corregidas
+todos los fix q corrija, corregirlo en el script tb para q en la siguiente pasada traduzca bien las ocupaciones femeninas corregidas. Mejor usar globals y tirar de aqui
 
 enlazar asi desde las bios: [[fotógrafo italiano|fotógrafo]] (tocando la {{introducción auto}} y creando redirección al plural fotógrafos italianos con el bot q crea las listas personas), corregir en la siguiente iteracion (cuidado con los jobs)
 
 q la plantilla Infobox Result2 almacene el numero de sitios web y numero de imagenes disponibles, corregir en la siguiente iteracion (cuidado con los jobs)
 
 q la plantilla Personas almacene el numero de personas halladas. Servira para saber si mostrar el enlace a [[abadeses de zimbaue]] y otras cosas remotas o no
-
-no crear listas a menos q haya 1 resultado. Habra muchas q no tengan sentido por ser muy remotas
 """
 
 import time
@@ -94,7 +91,7 @@ ocupaciones = {
     'asesino en serie': {'ms': 'asesino en serie', 'fs': 'asesina en serie', 'mp': 'asesinos en serie', 'fp': 'asesinas en serie' }, 
     'asesor': {'ms': 'asesor', 'fs': 'asesora', 'mp': 'asesores', 'fp': 'asesoras' }, 
     'asesor fiscal': {'ms': 'asesor fiscal', 'fs': 'asesora fiscal', 'mp': 'asesores fiscales', 'fp': 'asesoras fiscales' }, 
-    'asistente social': {'ms': 'asistente social', 'fs': 'asistenta social', 'mp': 'asistente socials', 'fp': 'asistenta socials' }, 
+    'asistente social': {'ms': 'asistente social', 'fs': 'asistenta social', 'mp': 'asistentes sociales', 'fp': 'asistentas sociales' }, 
     'astrofísico': {'ms': 'astrofísico', 'fs': 'astrofísica', 'mp': 'astrofísicos', 'fp': 'astrofísicas' }, 
     'astrólogo': {'ms': 'astrólogo', 'fs': 'astróloga', 'mp': 'astrólogos', 'fp': 'astrólogas' }, 
     'astrónomo': {'ms': 'astrónomo', 'fs': 'astrónoma', 'mp': 'astrónomos', 'fp': 'astrónomas' }, 

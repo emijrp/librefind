@@ -25,9 +25,17 @@ def main():
     global ocupaciones_list
     
     site = pywikibot.Site('librefind', 'librefind')
-    for nacionalidad, nacprops in nacionalidades_list:
+    skipuntilcountry = 'Austria'
+    for pais, nacprops in nacionalidades_list:
+        if skipuntilcountry:
+            if skipuntilcountry == pais:
+                skipuntilcountry = ''
+            else:
+                print('Skiping until... %s' % (skipuntilcountry))
+                continue
+        
         for ocupacion, ocuprops in ocupaciones_list:
-            print(nacionalidad, ocupacion)
+            print(pais, ocupacion)
             query = '[[clase%3A%3Apersona]][[ocupaci%C3%B3n%3A%3A' + urllib.parse.quote(ocuprops['ms']) + '||' + urllib.parse.quote(ocuprops['fs']) + ']][[nacionalidad%3A%3A' + urllib.parse.quote(nacprops['ms']) +'||' + urllib.parse.quote(nacprops['fs']) +']]&p=format%3Dbroadtable%2Flink%3Dall%2Fheaders%3Dshow&eq=no'
             url = 'https://www.librefind.org/w/index.php?title=Especial:Ask&q=' + query
             raw = getURL(url).strip()

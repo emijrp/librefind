@@ -25,6 +25,8 @@ import urllib.parse
 
 import pywikibot
 
+from librefindglobals import *
+
 """ TODO
 
 * Que cuando un elemento en wikidata cambie de alias (por ej. si alguien corrige el nombre o lo traduce), el bot renombre la pagina de librefind. Hay algunos "X of Y" de nombres aristocraticos y reyes sin traducir todavia por ejemplo.
@@ -350,7 +352,7 @@ country2nationality = {
     'Madagascar': {'masculino': 'malgache', 'femenino': 'malgache' }, 
     'Malasia': {'masculino': 'malasio', 'femenino': 'malasia' }, 
     'Malaui': {'masculino': 'malauí', 'femenino': 'malauí' }, 
-    'Maldivas': {'masculino': 'malivo', 'femenino': 'maldiva' }, 
+    'Maldivas': {'masculino': 'maldivo', 'femenino': 'maldiva' }, 
     'Malí': {'masculino': 'maliense', 'femenino': 'maliense' }, 
     'Malta': {'masculino': 'maltés', 'femenino': 'maltesa' }, 
     'Marruecos': {'masculino': 'marroquí', 'femenino': 'marroquí' }, 
@@ -380,7 +382,7 @@ country2nationality = {
     'Paraguay': {'masculino': 'paraguayo', 'femenino': 'paraguaya' }, 
     'Perú': {'masculino': 'peruano', 'femenino': 'peruana' }, 
     'Polonia': {'masculino': 'polaco', 'femenino': 'polaca' }, 
-    'Portugal': {'masculino': 'portugués', 'femenino': 'portugesa' }, 
+    'Portugal': {'masculino': 'portugués', 'femenino': 'portuguesa' }, 
     'Reino Unido': {'masculino': 'británico', 'femenino': 'británica' }, 
     'República Árabe Saharaui Democrática': {'masculino': 'saharaui', 'femenino': 'saharaui' }, 
     'República Centroafricana': {'masculino': 'centroafricano', 'femenino': 'centroafricana' }, 
@@ -441,7 +443,7 @@ country2nationality = {
 }
 
 ocupfem = {
-    'abad': 'abad', 
+    'abad': 'abadesa', 
     'abogado': 'abogada', 
     'abogado defensor': 'abogada defensora', 
     'académico': 'académica', 
@@ -474,7 +476,7 @@ ocupfem = {
     'anticuario': 'anticuaria', 
     'antropólogo': 'antropóloga', 
     'apneísta': 'apneísta', 
-    'árbitro': 'árbitro', 
+    'árbitro': 'árbitra', 
     'árbitro de fútbol': 'árbitro de fútbol', 
     'archivero': 'archivera', 
     'archivista paleógrafo': 'archivista paleógrafa', 
@@ -553,8 +555,8 @@ ocupfem = {
     'coleccionista de arte': 'coleccionista de arte', 
     'colorista': 'colorista', 
     'columnista': 'columnista', 
-    'comediante': 'comediante', 
-    'comediante en vivo': 'comediante en vivo', 
+    'comediante': 'comedianta', 
+    'comediante en vivo': 'comedianta en vivo', 
     'comentarista': 'comentarista', 
     'comentarista deportivo': 'comentarista deportiva', 
     'comerciante': 'comerciante', 
@@ -668,7 +670,7 @@ ocupfem = {
     'esperantista': 'esperantista', 
     'esquiador': 'esquiadora', 
     'esquiador acrobático': 'esquiadora acrobática', 
-    'esquiador alpino': 'esquiadora alpino', 
+    'esquiador alpino': 'esquiadora alpina', 
     'esquiador de fondo': 'esquiadora de fondo', 
     'esquiador de travesía': 'esquiadora de travesía', 
     'esquiador orientador': 'esquiadora orientadora', 
@@ -683,7 +685,7 @@ ocupfem = {
     'filántropo': 'filántropa', 
     'filólogo': 'filóloga', 
     'filósofo': 'filósofa', 
-    'filólogo clásico': 'filósofa clásica', 
+    'filólogo clásico': 'filóloga clásica', 
     'financiero': 'financiera', 
     'físico': 'física', 
     'flautista': 'flautista', 
@@ -714,7 +716,7 @@ ocupfem = {
     'guionista': 'guionista', 
     'guionista de historieta': 'guionista de historieta', 
     'guitarrista': 'guitarrista', 
-    'guitarrista clásico': 'guitarrista clásico', 
+    'guitarrista clásico': 'guitarrista clásica', 
     'guitarrista de jazz': 'guitarrista de jazz', 
     'hematólogo': 'hematóloga', 
     'halterófilo': 'halterófila', 
@@ -730,7 +732,7 @@ ocupfem = {
     'historiador social': 'historiadora social', 
     'historietista': 'historietista', 
     'humorista': 'humorista', 
-    'humorista gráfico': 'humorista gráfico', 
+    'humorista gráfico': 'humorista gráfica', 
     'iconógrafo': 'iconógrafa', 
     'ilustrador': 'ilustradora', 
     'ilustrador botánico': 'ilustradora botánica', 
@@ -834,7 +836,6 @@ ocupfem = {
     'músico de jazz': 'música de jazz', 
     'nadador': 'nadadora', 
     'nadador sincronizado': 'nadadora sincronizada', 
-    'nadador sincronizada': 'nadadora sincronizada', 
     'nadadora sincronizada': 'nadadora sincronizada', 
     'nana': 'nana', 
     'narrador en off': 'narradora en off', 
@@ -959,7 +960,7 @@ ocupfem = {
     'tenista de mesa': 'tenista de mesa', 
     'tenista en silla de ruedas': 'tenista en silla de ruedas', 
     'teólogo': 'teóloga', 
-    'teórico literario': 'teórica literario', 
+    'teórico literario': 'teórica literaria', 
     'teórico racial': 'teórica racial', 
     'teclista': 'teclista', 
     'tipógrafo': 'tipógrafa', 
@@ -1030,25 +1031,6 @@ def getOccupationLabels():
         if q and not re.search(r'(?im)^Q\d', occupationlabel):
             occupations[q] = occupationlabel
     return occupations
-
-def getURL(url=''):
-    raw = ''
-    req = urllib.request.Request(url, headers={ 'User-Agent': 'Mozilla/5.0' })
-    try:
-        raw = urllib.request.urlopen(req).read().strip().decode('utf-8')
-    except:
-        sleep = 10 # seconds
-        maxsleep = 100
-        while sleep <= maxsleep:
-            print('Error while retrieving: %s' % (url))
-            print('Retry in %s seconds...' % (sleep))
-            time.sleep(sleep)
-            try:
-                raw = urllib.request.urlopen(req).read().strip().decode('utf-8')
-            except:
-                pass
-            sleep = sleep * 2
-    return raw
 
 def group_unconcat(concat='', labelclass=''):
     global labels

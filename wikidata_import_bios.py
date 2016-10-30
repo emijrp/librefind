@@ -340,9 +340,9 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 if props['fnac'][0].endswith('-01-01') and props['ffal'][0].endswith('-01-01'): # si nace y muere en 1 enero
                     props['fnac'][0] = props['fnac'][0].split('-')[0]
                     props['ffal'][0] = props['ffal'][0].split('-')[0]
-                elif int(props['fnac'][0].split('-')[0]) < 1900 and props['fnac'][0].endswith('-01-01'):
+                elif props['fnac'] and props['fnac'][0] and int(props['fnac'][0].split('-')[0]) < 1900 and props['fnac'][0].endswith('-01-01'):
                     props['fnac'][0] = props['fnac'][0].split('-')[0]
-                elif int(props['ffal'][0].split('-')[0]) < 1900 and props['ffal'][0].endswith('-01-01'):
+                elif props['ffal'] and props['ffal'][0] and int(props['ffal'][0].split('-')[0]) < 1900 and props['ffal'][0].endswith('-01-01'):
                     props['ffal'][0] = props['ffal'][0].split('-')[0]
                 #fin resolucion fechas
                 
@@ -355,6 +355,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 if not images and not props['commonscat']:
                     print('No hay imagen, saltamos')
                     continue
+                    #pass
                 websites = props['websites']
                 if '' in websites:
                     websites.remove('')

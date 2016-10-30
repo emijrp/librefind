@@ -363,12 +363,29 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                     #print('No hay website, saltamos')
                     #continue
                 
-                if len(props['father']) > 1:
+                #relatives
+                father = props['father']
+                if '' in father:
+                    father.remove('')
+                if len(father) > 1:
                     print('Mas de un padre, saltamos')
                     continue
-                if len(props['mother']) > 1:
+                mother = props['mother']
+                if '' in mother:
+                    mother.remove('')
+                if len(mother) > 1:
                     print('Mas de una madre, saltamos')
                     continue
+                brother = props['brother']
+                if '' in brother:
+                    brother.remove('')
+                sister = props['sister']
+                if '' in sister:
+                    sister.remove('')
+                child = props['child']
+                if '' in child:
+                    child.remove('')
+                #end relatives
                 
                 #start occupations
                 #remove unuseful occupations
@@ -423,7 +440,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                     ['Padre', '; '.join(father)], 
                     ['Madre', '; '.join(mother)], 
                     ['Hermano', '; '.join(brother)], 
-                    ['Hermana', '; '.join(brother)], 
+                    ['Hermana', '; '.join(sister)], 
                     ['Descendiente', '; '.join(child)], 
                 ]
                 
@@ -434,7 +451,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                     if pvalue:
                         properties += "{{Property\n|property=%s\n|value=%s\n}}" % (pname, pvalue)
 
-                output = """{{Persona
+                output = """{{Búsqueda Persona
 |search=%s%s
 |wikidata=%s%s%s%s
 }}""" % (props['nombre'], props['commonscat'] and '\n|commons=%s' % (props['commonscat'][0]) or '', props['q'], websites and '\n|websites=%s' % (websites) or '', gallery and '\n|gallery=%s' % (gallery) or '', properties and '\n|properties=%s' % (properties) or '')

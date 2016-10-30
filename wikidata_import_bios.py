@@ -28,973 +28,28 @@ import pywikibot
 from librefindglobals import *
 
 """ TODO
-
 * Que cuando un elemento en wikidata cambie de alias (por ej. si alguien corrige el nombre o lo traduce), el bot renombre la pagina de librefind. Hay algunos "X of Y" de nombres aristocraticos y reyes sin traducir todavia por ejemplo.
-* Que hacer con las fechas incompletas que devuelven 1 de enero?
-* Algunas imágenes tiene comas ',' en el nombre y se almacenan como varias por el arraymap. Usar otro delimitador ';' para las propiedades? Otra solucion?
-* Father, mother, sister, brother, TW, FB, YT, G+ ids, place of burial, https://www.wikidata.org/wiki/Q2831
-* Instagram, mass (pound) https://www.wikidata.org/wiki/Q20821793
+
+Nuevas propiedades:
+* youtube accounts, place of burial, https://www.wikidata.org/wiki/Q2831
+* mass (pound) https://www.wikidata.org/wiki/Q20821793
 * Height, mass (kg), participant of https://www.wikidata.org/wiki/Q1950
+* En cuanto a familia la estructura de frase podría ser: Es/Fue hijo/a de X e Y. Se casó/Contrajo matrimonio con Z. Fue padre/madre de H hijos O Su hijo/a es/fue H. ¿O mejor lo mostramos solo en la infobox/un arbol genealogico? Y como almacenar los nombres? Con el QID o el nombre en plano? Lo segundo tiene el problema de que puede haber colisiones, lo primero que la pagina no la hayamos creado en librefind y no podamos recuperar el label...
+* P1038 otros parientes https://www.wikidata.org/wiki/Q335022
+* P737 influido por https://www.wikidata.org/wiki/Q335022
+* P1066 fue alumno de https://www.wikidata.org/wiki/Q335022 / P802 Estudiante (estudiantes de una persona)
+* Estudiante de https://www.wikidata.org/wiki/Property:P1066
+* P135 movimiento https://www.wikidata.org/wiki/Q859
+* P109 firma
+* dbpedia
+
+* Poner miniatura en la infobox de las personas si existen en librefind, ej: Elek Erkel tiene padre y 3 hermanos notables con imagen
+* Páginas para días desde el año 1000 al 2016? Solo para las q tengan algun evento (nacimiento, fallecimiento, etc)
+* Integrar comentarios (talkpage) en la parte baja de la pagina de resultados?
+* Cada bio podria tener un mapa con las localizaciones importantes para la persona (lugar de nacimiento, fallecimiento y quizas otras cosas). Haria falta tener las coordenadas en un articulo para cada localizacion. Serían muchas páginass quizas...
 """
 
 labels = { 'educatedat': {}, 'positions': {}, 'occupations': {}, 'awards': {}, }
-p27 = {
-    'Afganistán': 'Q889', 
-    'Albania': 'Q222', 
-    'Alemania': 'Q183', 
-    'Andorra': 'Q228', 
-    'Angola': 'Q916', 
-    'Antigua y Barbuda': 'Q781', 
-    'Arabia Saudita': 'Q851', 
-    'Argelia': 'Q262', 
-    'Argentina': 'Q414', 
-    'Armenia': 'Q399', 
-    'Australia': 'Q408', 
-    'Austria': 'Q40', 
-    'Azerbaiyán': 'Q227', 
-    'Bahamas': 'Q778', 
-    'Bangladés': 'Q902', 
-    'Barbados': 'Q244', 
-    'Baréin': 'Q398', 
-    'Bélgica': 'Q31', 
-    'Belice': 'Q242', 
-    'Benín': 'Q962', 
-    'Bielorrusia': 'Q184', 
-    'Birmania': 'Q836', 
-    'Bolivia': 'Q750', 
-    'Bosnia y Herzegovina': 'Q225', 
-    'Botsuana': 'Q963', 
-    'Brasil': 'Q155', 
-    'Brunéi': 'Q921', 
-    'Bulgaria': 'Q219', 
-    'Burkina Faso': 'Q965', 
-    'Burundi': 'Q967', 
-    'Bután': 'Q917', 
-    'Cabo Verde': 'Q1011', 
-    'Camboya': 'Q424', 
-    'Camerún': 'Q1009', 
-    'Canadá': 'Q16', 
-    'Catar': 'Q846', 
-    'Chad': 'Q657', 
-    'Chile': 'Q298', 
-    'Chipre': 'Q229', 
-    'Ciudad del Vaticano': 'Q237', 
-    'Colombia': 'Q739', 
-    'Comoras': 'Q970', 
-    'Corea del Norte': 'Q423', 
-    'Corea del Sur': 'Q884', 
-    'Costa de Marfil': 'Q1008', 
-    'Costa Rica': 'Q800', 
-    'Croacia': 'Q224', 
-    'Cuba': 'Q241', 
-    'Dinamarca': 'Q35', 
-    'Dominica': 'Q784', 
-    'Ecuador': 'Q736', 
-    'Egipto': 'Q79', 
-    'El Salvador': 'Q792', 
-    'Emiratos Árabes Unidos': 'Q878', 
-    'Eritrea': 'Q986', 
-    'Eslovaquia': 'Q214', 
-    'Eslovenia': 'Q215', 
-    'España': 'Q29', 
-    'Estados Unidos': 'Q30', 
-    'Estonia': 'Q191', 
-    'Etiopía': 'Q115', 
-    'Filipinas': 'Q928', 
-    'Finlandia': 'Q33', 
-    'Fiyi': 'Q712', 
-    'Francia': 'Q142', 
-    'Gabón': 'Q1000', 
-    'Gambia': 'Q1005', 
-    'Georgia': 'Q230', 
-    'Ghana': 'Q117', 
-    'Granada': 'Q769', 
-    'Grecia': 'Q41', 
-    'Guatemala': 'Q774', 
-    'Guinea': 'Q1006', 
-    'Guinea Ecuatorial': 'Q983', 
-    'Guinea-Bisáu': 'Q1007', 
-    'Guyana': 'Q734', 
-    'Haití': 'Q790', 
-    'Honduras': 'Q783', 
-    'Hungría': 'Q28', 
-    'India': 'Q668', 
-    'Indonesia': 'Q252', 
-    'Irak': 'Q796', 
-    'Irán': 'Q794', 
-    'Irlanda': 'Q27', 
-    'Islandia': 'Q189', 
-    'Islas Marshall': 'Q709', 
-    'Islas Salomón': 'Q685', 
-    'Israel': 'Q801', 
-    'Italia': 'Q38', 
-    'Jamaica': 'Q766', 
-    'Japón': 'Q17', 
-    'Jordania': 'Q810', 
-    'Kazajistán': 'Q232', 
-    'Kenia': 'Q114', 
-    'Kirguistán': 'Q813', 
-    'Kiribati': 'Q710', 
-    'Kosovo': 'Q1246', 
-    'Kuwait': 'Q817', 
-    'Laos': 'Q819', 
-    'Lesoto': 'Q1013', 
-    'Letonia': 'Q211', 
-    'Líbano': 'Q822', 
-    'Liberia': 'Q1014', 
-    'Libia': 'Q1016', 
-    'Liechtenstein': 'Q347', 
-    'Lituania': 'Q37', 
-    'Luxemburgo': 'Q32', 
-    'Madagascar': 'Q1019', 
-    'Malasia': 'Q833', 
-    'Malaui': 'Q1020', 
-    'Maldivas': 'Q826', 
-    'Malí': 'Q912', 
-    'Malta': 'Q233', 
-    'Marruecos': 'Q1028', 
-    'Mauricio': 'Q1027', 
-    'Mauritania': 'Q1025', 
-    'México': 'Q96', 
-    #'Micronesia': 'Q702', 
-    'Moldavia': 'Q217', 
-    'Mónaco': 'Q235', 
-    'Mongolia': 'Q711', 
-    'Montenegro': 'Q236', 
-    'Mozambique': 'Q1029', 
-    'Namibia': 'Q1030', 
-    'Nauru': 'Q697', 
-    'Nepal': 'Q837', 
-    'Nicaragua': 'Q811', 
-    'Níger': 'Q1032', 
-    'Nigeria': 'Q1033', 
-    'Noruega': 'Q20', 
-    'Nueva Zelanda': 'Q664', 
-    'Omán': 'Q842', 
-    'Países Bajos': 'Q55', 
-    'Pakistán': 'Q843', 
-    'Palaos': 'Q695', 
-    'Panamá': 'Q804', 
-    'Papúa Nueva Guinea': 'Q691', 
-    'Paraguay': 'Q733', 
-    'Perú': 'Q419', 
-    'Polonia': 'Q36', 
-    'Portugal': 'Q45', 
-    'Reino Unido': 'Q145', 
-    'República Árabe Saharaui Democrática': 'Q40362', 
-    'República Centroafricana': 'Q929', 
-    'República Checa': 'Q213', 
-    'República de China': 'Q865', 
-    'República de Macedonia': 'Q221', 
-    'República del Congo': 'Q971', 
-    'República Democrática del Congo': 'Q974', 
-    'República Dominicana': 'Q786', 
-    'República Popular China': 'Q148', 
-    'Ruanda': 'Q1037', 
-    'Rumania': 'Q218', 
-    'Rusia': 'Q159', 
-    'Samoa': 'Q683', 
-    'San Cristóbal y Nieves': 'Q763', 
-    'San Marino': 'Q238', 
-    'San Vicente y las Granadinas': 'Q757', 
-    'Santa Lucía': 'Q760', 
-    'Santo Tomé y Príncipe': 'Q1039', 
-    'Senegal': 'Q1041', 
-    'Serbia': 'Q403', 
-    'Seychelles': 'Q1042', 
-    'Sierra Leona': 'Q1044', 
-    'Singapur': 'Q334', 
-    'Siria': 'Q858', 
-    'Somalia': 'Q1045', 
-    'Sri Lanka': 'Q854', 
-    'Suazilandia': 'Q1050', 
-    'Sudáfrica': 'Q258', 
-    'Sudán': 'Q1049', 
-    'Sudán del Sur': 'Q958', 
-    'Suecia': 'Q34', 
-    'Suiza': 'Q39', 
-    'Surinam': 'Q730', 
-    'Tailandia': 'Q869', 
-    'Tanzania': 'Q924', 
-    'Tayikistán': 'Q863', 
-    'Timor Oriental': 'Q574', 
-    'Togo': 'Q945', 
-    'Tonga': 'Q678', 
-    'Trinidad y Tobago': 'Q754', 
-    'Túnez': 'Q948', 
-    'Turkmenistán': 'Q874', 
-    'Turquía': 'Q43', 
-    'Tuvalu': 'Q672', 
-    'Ucrania': 'Q212', 
-    'Uganda': 'Q1036', 
-    'Uruguay': 'Q77', 
-    'Uzbekistán': 'Q265', 
-    'Vanuatu': 'Q686', 
-    'Venezuela': 'Q717', 
-    'Vietnam': 'Q881', 
-    'Yemen': 'Q805', 
-    'Yibuti': 'Q977', 
-    'Zambia': 'Q953', 
-    'Zimbabue': 'Q954', 
-}
-p27list = [[k, v] for k, v in p27.items()]
-p27list.sort()
-#https://query.wikidata.org/#SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%0AWHERE%20{%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ6256.%0A%20%20SERVICE%20wikibase%3Alabel%20{%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%22%20}%0A}
-country2nationality = {
-    'Afganistán': {'masculino': 'afgano', 'femenino': 'afgana' }, 
-    'Albania': {'masculino': 'albanés', 'femenino': 'albanesa' }, 
-    'Alemania': {'masculino': 'alemán', 'femenino': 'alemana' }, 
-    'Andorra': {'masculino': 'andorrano', 'femenino': 'andorrana' }, 
-    'Angola': {'masculino': 'angoleño', 'femenino': 'angoleña' }, 
-    'Antigua y Barbuda': {'masculino': 'antiguano', 'femenino': 'antiguana' }, 
-    'Arabia Saudita': {'masculino': 'saudí', 'femenino': 'saudí' }, 
-    'Argelia': {'masculino': 'argelino', 'femenino': 'argelina' }, 
-    'Argentina': {'masculino': 'argentino', 'femenino': 'argentina' }, 
-    'Armenia': {'masculino': 'armenio', 'femenino': 'armenia' }, 
-    'Australia': {'masculino': 'australiano', 'femenino': 'australiana' }, 
-    'Austria': {'masculino': 'austríaco', 'femenino': 'austríaca' }, 
-    'Azerbaiyán': {'masculino': 'azerbaiyano', 'femenino': 'azerbaiyana' }, 
-    'Bahamas': {'masculino': 'bahameño', 'femenino': 'bahameña' }, 
-    'Bangladés': {'masculino': 'bangladesí', 'femenino': 'bangladesí' }, 
-    'Barbados': {'masculino': 'barbadense', 'femenino': 'barbadense' }, 
-    'Baréin': {'masculino': 'bareiní', 'femenino': 'bareiní' }, 
-    'Bélgica': {'masculino': 'belga', 'femenino': 'belga' }, 
-    'Belice': {'masculino': 'beliceño', 'femenino': 'beliceña' }, 
-    'Benín': {'masculino': 'beninés', 'femenino': 'beninesa' }, 
-    'Bielorrusia': {'masculino': 'bielorruso', 'femenino': 'bielorrusa' }, 
-    'Birmania': {'masculino': 'birmano', 'femenino': 'birmana' }, 
-    'Bolivia': {'masculino': 'boliviano', 'femenino': 'boliviana' }, 
-    'Bosnia y Herzegovina': {'masculino': 'bosnio', 'femenino': 'bosnia' }, 
-    'Botsuana': {'masculino': 'botsuano', 'femenino': 'botsuana' }, 
-    'Brasil': {'masculino': 'brasileño', 'femenino': 'brasileña' }, 
-    'Brunéi': {'masculino': 'bruneano', 'femenino': 'bruneana' }, 
-    'Bulgaria': {'masculino': 'búlgaro', 'femenino': 'búlgara' }, 
-    'Burkina Faso': {'masculino': 'burkinés', 'femenino': 'burkinesa' }, 
-    'Burundi': {'masculino': 'burundés', 'femenino': 'burundesa' }, 
-    'Bután': {'masculino': 'butanés', 'femenino': 'butanesa' }, 
-    'Cabo Verde': {'masculino': 'caboverdiano', 'femenino': 'caboverdiana' }, 
-    'Camboya': {'masculino': 'camboyano', 'femenino': 'camboyana' }, 
-    'Camerún': {'masculino': 'camerunés', 'femenino': 'camerunesa' }, 
-    'Canadá': {'masculino': 'canadiense', 'femenino': 'canadiense' }, 
-    'Catar': {'masculino': 'catarí', 'femenino': 'catarí' }, 
-    'Chad': {'masculino': 'chadiano', 'femenino': 'chadiana' }, 
-    'Chile': {'masculino': 'chileno', 'femenino': 'chilena' }, 
-    'Chipre': {'masculino': 'chipriota', 'femenino': 'chipriota' }, 
-    'Ciudad del Vaticano': {'masculino': 'vaticano', 'femenino': 'vaticana' }, 
-    'Colombia': {'masculino': 'colombiano', 'femenino': 'colombiana' }, 
-    'Comoras': {'masculino': 'comorense', 'femenino': 'comorense' }, 
-    'Corea del Norte': {'masculino': 'norcoreano', 'femenino': 'norcoreana' }, 
-    'Corea del Sur': {'masculino': 'surcoreano', 'femenino': 'surcoreana' }, 
-    'Costa de Marfil': {'masculino': 'marfileño', 'femenino': 'marfileña' }, 
-    'Costa Rica': {'masculino': 'costarricense', 'femenino': 'costarricense' }, 
-    'Croacia': {'masculino': 'croata', 'femenino': 'croata' }, 
-    'Cuba': {'masculino': 'cubano', 'femenino': 'cubana' }, 
-    'Dinamarca': {'masculino': 'danés', 'femenino': 'danesa' }, 
-    'Dominica': {'masculino': 'dominiqués', 'femenino': 'dominiquesa' }, 
-    'Ecuador': {'masculino': 'ecuatoriano', 'femenino': 'ecuatoriana' }, 
-    'Egipto': {'masculino': 'egipcio', 'femenino': 'egipcia' }, 
-    'El Salvador': {'masculino': 'salvadoreño', 'femenino': 'salvadoreña' }, 
-    'Emiratos Árabes Unidos': {'masculino': 'emiratí', 'femenino': 'emiratí' }, 
-    'Eritrea': {'masculino': 'eritreo', 'femenino': 'eritrea' }, 
-    'Eslovaquia': {'masculino': 'eslovaco', 'femenino': 'eslovaca' }, 
-    'Eslovenia': {'masculino': 'esloveno', 'femenino': 'eslovena' }, 
-    'España': {'masculino': 'español', 'femenino': 'española' }, 
-    'Estados Unidos': {'masculino': 'estadounidense', 'femenino': 'estadounidense' }, 
-    'Estonia': {'masculino': 'estonio', 'femenino': 'estonia' }, 
-    'Etiopía': {'masculino': 'etíope', 'femenino': 'etíope' }, 
-    'Filipinas': {'masculino': 'filipino', 'femenino': 'filipina' }, 
-    'Finlandia': {'masculino': 'finlandés', 'femenino': 'finlandesa' }, 
-    'Fiyi': {'masculino': 'fiyiano', 'femenino': 'fiyiana' }, 
-    'Francia': {'masculino': 'francés', 'femenino': 'francesa' }, 
-    'Gabón': {'masculino': 'gabonés', 'femenino': 'gabonesa' }, 
-    'Gambia': {'masculino': 'gambiano', 'femenino': 'gambiana' }, 
-    'Georgia': {'masculino': 'georgiano', 'femenino': 'georgiana' }, 
-    'Ghana': {'masculino': 'ghanés', 'femenino': 'ghanesa' }, 
-    'Granada': {'masculino': 'granadino', 'femenino': 'granadina' }, 
-    'Grecia': {'masculino': 'griego', 'femenino': 'griega' }, 
-    'Guatemala': {'masculino': 'guatemalteco', 'femenino': 'guatemalteca' }, 
-    'Guinea': {'masculino': 'guineano', 'femenino': 'guineana' }, 
-    'Guinea Ecuatorial': {'masculino': 'ecuatoguineano', 'femenino': 'ecuatoguineana' }, 
-    'Guinea-Bisáu': {'masculino': 'guineano', 'femenino': 'guineana' }, 
-    'Guyana': {'masculino': 'guyanés', 'femenino': 'guyanesa' }, 
-    'Haití': {'masculino': 'haitiano', 'femenino': 'haitiana' }, 
-    'Honduras': {'masculino': 'hondureño', 'femenino': 'hondureña' }, 
-    'Hungría': {'masculino': 'húngaro', 'femenino': 'húngara' }, 
-    'Imperio ruso': {'masculino': 'ruso', 'femenino': 'rusa' }, 
-    'India': {'masculino': 'indio', 'femenino': 'india' }, 
-    'Indonesia': {'masculino': 'indonesio', 'femenino': 'indonesia' }, 
-    'Irak': {'masculino': 'iraquí', 'femenino': 'iraquí' }, 
-    'Irán': {'masculino': 'iraní', 'femenino': 'iraní' }, 
-    'Irlanda': {'masculino': 'irlandés', 'femenino': 'irlandesa' }, 
-    'Islandia': {'masculino': 'islandés', 'femenino': 'islandesa' }, 
-    'Islas Marshall': {'masculino': 'marshalés', 'femenino': 'marshalesa' }, 
-    'Islas Salomón': {'masculino': 'salomonense', 'femenino': 'salomonense' }, 
-    'Israel': {'masculino': 'israelí', 'femenino': 'israelí' }, 
-    'Italia': {'masculino': 'italiano', 'femenino': 'italiana' }, 
-    'Jamaica': {'masculino': 'jamaicano', 'femenino': 'jamaicana' }, 
-    'Japón': {'masculino': 'japonés', 'femenino': 'japonesa' }, 
-    'Jordania': {'masculino': 'jordano', 'femenino': 'jordana' }, 
-    'Kazajistán': {'masculino': 'kazajo', 'femenino': 'kazaja' }, 
-    'Kenia': {'masculino': 'keniano', 'femenino': 'keniana' }, 
-    'Kirguistán': {'masculino': 'kirguís', 'femenino': 'kirguís' }, 
-    'Kiribati': {'masculino': 'kiribatiano', 'femenino': 'kiribatiana' }, 
-    'Kosovo': {'masculino': 'kosovar', 'femenino': 'kosovar' }, 
-    'Kuwait': {'masculino': 'kuwaití', 'femenino': 'kuwaití' }, 
-    'Laos': {'masculino': 'laosiano', 'femenino': 'laosiana' }, 
-    'Lesoto': {'masculino': 'lesotense', 'femenino': 'lesotense' }, 
-    'Letonia': {'masculino': 'letón', 'femenino': 'letona' }, 
-    'Líbano': {'masculino': 'libanés', 'femenino': 'libanesa' }, 
-    'Liberia': {'masculino': 'liberiano', 'femenino': 'liberiana' }, 
-    'Libia': {'masculino': 'libio', 'femenino': 'libia' }, 
-    'Liechtenstein': {'masculino': 'liechtensteiniano', 'femenino': 'liechtensteiniana' }, 
-    'Lituania': {'masculino': 'lituano', 'femenino': 'lituana' }, 
-    'Luxemburgo': {'masculino': 'luxemburgués', 'femenino': 'luxemburguesa' }, 
-    'Madagascar': {'masculino': 'malgache', 'femenino': 'malgache' }, 
-    'Malasia': {'masculino': 'malasio', 'femenino': 'malasia' }, 
-    'Malaui': {'masculino': 'malauí', 'femenino': 'malauí' }, 
-    'Maldivas': {'masculino': 'maldivo', 'femenino': 'maldiva' }, 
-    'Malí': {'masculino': 'maliense', 'femenino': 'maliense' }, 
-    'Malta': {'masculino': 'maltés', 'femenino': 'maltesa' }, 
-    'Marruecos': {'masculino': 'marroquí', 'femenino': 'marroquí' }, 
-    'Mauricio': {'masculino': 'mauriciano', 'femenino': 'mauriciana' }, 
-    'Mauritania': {'masculino': 'mauritano', 'femenino': 'mauritana' }, 
-    'México': {'masculino': 'mexicano', 'femenino': 'mexicana' }, 
-    #'Micronesia': {'masculino': '', 'femenino': '' }, 
-    'Moldavia': {'masculino': 'moldavo', 'femenino': 'moldava' }, 
-    'Mónaco': {'masculino': 'monegasco', 'femenino': 'monegasca' }, 
-    'Mongolia': {'masculino': 'mongol', 'femenino': 'mongola' }, 
-    'Montenegro': {'masculino': 'montenegrino', 'femenino': 'montenegrina' }, 
-    'Mozambique': {'masculino': 'mozambiqueño', 'femenino': 'mozambiqueña' }, 
-    'Namibia': {'masculino': 'namibio', 'femenino': 'namibia' }, 
-    'Nauru': {'masculino': 'nauruano', 'femenino': 'nauruana' }, 
-    'Nepal': {'masculino': 'nepalés', 'femenino': 'nepalesa' }, 
-    'Nicaragua': {'masculino': 'nicaragüense', 'femenino': 'nicaragüense' }, 
-    'Níger': {'masculino': 'nigerino', 'femenino': 'nigerina' }, 
-    'Nigeria': {'masculino': 'nigeriano', 'femenino': 'nigeriana' }, 
-    'Noruega': {'masculino': 'noruego', 'femenino': 'noruega' }, 
-    'Nueva Zelanda': {'masculino': 'neozelandés', 'femenino': 'neozelandesa' }, 
-    'Omán': {'masculino': 'omaní', 'femenino': 'omaní' }, 
-    'Países Bajos': {'masculino': 'neerlandés', 'femenino': 'neerlandesa' }, 
-    'Pakistán': {'masculino': 'pakistaní', 'femenino': 'pakistaní' }, 
-    'Palaos': {'masculino': 'palauano', 'femenino': 'palauana' }, 
-    'Panamá': {'masculino': 'panameño', 'femenino': 'panameña' }, 
-    'Papúa Nueva Guinea': {'masculino': 'papú', 'femenino': 'papú' }, 
-    'Paraguay': {'masculino': 'paraguayo', 'femenino': 'paraguaya' }, 
-    'Perú': {'masculino': 'peruano', 'femenino': 'peruana' }, 
-    'Polonia': {'masculino': 'polaco', 'femenino': 'polaca' }, 
-    'Portugal': {'masculino': 'portugués', 'femenino': 'portuguesa' }, 
-    'Reino Unido': {'masculino': 'británico', 'femenino': 'británica' }, 
-    'República Árabe Saharaui Democrática': {'masculino': 'saharaui', 'femenino': 'saharaui' }, 
-    'República Centroafricana': {'masculino': 'centroafricano', 'femenino': 'centroafricana' }, 
-    'República Checa': {'masculino': 'checo', 'femenino': 'checa' }, 
-    'República de China': {'masculino': 'taiwanés', 'femenino': 'taiwanesa' }, 
-    'República de Macedonia': {'masculino': 'macedonio', 'femenino': 'macedonia' }, 
-    'República del Congo': {'masculino': 'congoleño', 'femenino': 'congoleña' }, 
-    'República Democrática del Congo': {'masculino': 'congoleño', 'femenino': 'congoleña' }, 
-    'República Dominicana': {'masculino': 'dominicano', 'femenino': 'dominicana' }, 
-    'República Popular China': {'masculino': 'chino', 'femenino': 'china' }, 
-    'Ruanda': {'masculino': 'ruandés', 'femenino': 'ruandesa' }, 
-    'Rumania': {'masculino': 'rumano', 'femenino': 'rumana' }, 
-    'Rusia': {'masculino': 'ruso', 'femenino': 'rusa' }, 
-    'Samoa': {'masculino': 'samoano', 'femenino': 'samoana' }, 
-    'San Cristóbal y Nieves': {'masculino': 'sancristobaleño', 'femenino': 'sancristobaleña' }, 
-    'San Marino': {'masculino': 'sanmarinense', 'femenino': 'sanmarinense' }, 
-    'San Vicente y las Granadinas': {'masculino': 'sanvicentino', 'femenino': 'sanvicentina' }, 
-    'Santa Lucía': {'masculino': 'santalucense', 'femenino': 'santalucense' }, 
-    'Santo Tomé y Príncipe': {'masculino': 'santotomense', 'femenino': 'santotomense' }, 
-    'Senegal': {'masculino': 'senegalés', 'femenino': 'senegalesa' }, 
-    'Serbia': {'masculino': 'serbio', 'femenino': 'serbia' }, 
-    'Seychelles': {'masculino': 'seychellense', 'femenino': 'seychellense' }, 
-    'Sierra Leona': {'masculino': 'sierraleonés', 'femenino': 'sierraleonesa' }, 
-    'Singapur': {'masculino': 'singapurense', 'femenino': 'singapurense' }, 
-    'Siria': {'masculino': 'sirio', 'femenino': 'siria' }, 
-    'Somalia': {'masculino': 'somalí', 'femenino': 'somalí' }, 
-    'Sri Lanka': {'masculino': 'ceilanés', 'femenino': 'ceilanesa' }, 
-    'Suazilandia': {'masculino': 'suazi', 'femenino': 'suazi' }, 
-    'Sudáfrica': {'masculino': 'sudafricano', 'femenino': 'sudafricana' }, 
-    'Sudán': {'masculino': 'sudanés', 'femenino': 'sudanesa' }, 
-    'Sudán del Sur': {'masculino': 'sursudanés', 'femenino': 'sursudanesa' }, 
-    'Suecia': {'masculino': 'sueco', 'femenino': 'sueca' }, 
-    'Suiza': {'masculino': 'suizo', 'femenino': 'suiza' }, 
-    'Surinam': {'masculino': 'surinamés', 'femenino': 'surinamesa' }, 
-    'Tailandia': {'masculino': 'tailandés', 'femenino': 'tailandesa' }, 
-    'Tanzania': {'masculino': 'tanzano', 'femenino': 'tanzana' }, 
-    'Tayikistán': {'masculino': 'tayiko', 'femenino': 'tayika' }, 
-    'Timor Oriental': {'masculino': 'timorense', 'femenino': 'timorense' }, 
-    'Togo': {'masculino': 'togolés', 'femenino': 'togolesa' }, 
-    'Tonga': {'masculino': 'tongano', 'femenino': 'tongana' }, 
-    'Trinidad y Tobago': {'masculino': 'trinitense', 'femenino': 'trinitense' }, 
-    'Túnez': {'masculino': 'tunecino', 'femenino': 'tunecina' }, 
-    'Turkmenistán': {'masculino': 'turcomano', 'femenino': 'turcomana' }, 
-    'Turquía': {'masculino': 'turco', 'femenino': 'turca' }, 
-    'Tuvalu': {'masculino': 'tuvaluano', 'femenino': 'tuvaluana' }, 
-    'Ucrania': {'masculino': 'ucraniano', 'femenino': 'ucraniana' }, 
-    'Uganda': {'masculino': 'ugandés', 'femenino': 'ugandesa' }, 
-    'Unión Soviética': {'masculino': 'soviético', 'femenino': 'soviética' }, 
-    'Uruguay': {'masculino': 'uruguayo', 'femenino': 'uruguaya' }, 
-    'Uzbekistán': {'masculino': 'uzbeko', 'femenino': 'uzbeka' }, 
-    'Vanuatu': {'masculino': 'vanuatuense', 'femenino': 'vanuatuense' }, 
-    'Venezuela': {'masculino': 'venezolano', 'femenino': 'venezolana' }, 
-    'Vietnam': {'masculino': 'vietnamita', 'femenino': 'vietnamita' }, 
-    'Yemen': {'masculino': 'yemení', 'femenino': 'yemení' }, 
-    'Yibuti': {'masculino': 'yibutiano', 'femenino': 'yibutiana' }, 
-    'Zambia': {'masculino': 'zambiano', 'femenino': 'zambiana' }, 
-    'Zimbabue': {'masculino': 'zimbabuense', 'femenino': 'zimbabuense' }, 
-}
-
-ocupfem = {
-    'abad': 'abadesa', 
-    'abogado': 'abogada', 
-    'abogado defensor': 'abogada defensora', 
-    'académico': 'académica', 
-    'acordeonista': 'acordeonista', 
-    'activista': 'activista', 
-    'actor': 'actriz', 
-    'actor de cine': 'actriz de cine', 
-    'actor de doblaje': 'actriz de doblaje', 
-    'actor de teatro': 'actriz de teatro', 
-    'actor de teatro musical': 'actriz de teatro musical', 
-    'actor de televisión': 'actriz de televisión', 
-    'actor de voz': 'actriz de voz', 
-    'actor pornográfico': 'actriz pornográfica',
-    'acuarelista': 'acuarelista', 
-    'aeronauta': 'aeronauta', 
-    'agente de bolsa': 'agente de bolsa', 
-    'agente de talentos': 'agente de talentos', 
-    'agente doble': 'agente doble', 
-    'agente penitenciario': 'agente penitenciaria', 
-    'agricultor': 'agricultora', 
-    'agrónomo': 'agrónoma', 
-    'ajedrecista': 'ajedrecista', 
-    'alto cargo': 'alto cargo', 
-    'algorista': 'algorista', 
-    'ama de casa': 'ama de casa', 
-    'ama de llaves': 'ama de llaves', 
-    'ambientalista': 'ambientalista', 
-    'anarquista': 'anarquista', 
-    'anatomista': 'anatomista', 
-    'anticuario': 'anticuaria', 
-    'antropólogo': 'antropóloga', 
-    'apneísta': 'apneísta', 
-    'árbitro': 'árbitra', 
-    'árbitro de fútbol': 'árbitro de fútbol', 
-    'archivero': 'archivera', 
-    'archivista paleógrafo': 'archivista paleógrafa', 
-    'aristócrata': 'aristócrata', 
-    'arpista': 'arpista', 
-    'arqueólogo': 'arqueóloga', 
-    'arqueólogo clásico': 'arqueóloga clásica', 
-    'arquero': 'arquera', 
-    'arquitecto': 'arquitecta', 
-    'arreglista': 'arreglista', 
-    'artesano': 'artesana', 
-    'artista': 'artista', 
-    'artista callejero': 'artista callejero', 
-    'artista contemporáneo': 'artista contemporánea', 
-    'artista de circo': 'artista de circo', 
-    'artista de graffiti': 'artista de graffiti', 
-    'artista de performance': 'artista de performance', 
-    'artista digital': 'artista digital', 
-    'artista marcial': 'artista marcial', 
-    'artista musical': 'artista musical', 
-    'artista plástico': 'artista plástica', 
-    'artista textil': 'artista textil', 
-    'asesino en serie': 'asesina en serie', 
-    'asesor': 'asesora', 
-    'asesor fiscal': 'asesora fiscal', 
-    'asistente social': 'asistenta social', 
-    'astrofísico': 'astrofísica', 
-    'astrólogo': 'astróloga', 
-    'astrónomo': 'astrónoma', 
-    'atleta': 'atleta', 
-    'autobiógrafo': 'autobiógrafa', 
-    'autor': 'autora', 
-    'aventurero': 'aventurera', 
-    'aviador': 'aviadora', 
-    'bacteriólogo': 'bacterióloga', 
-    'badmintonista': 'badmintonista', 
-    'bailarín': 'bailarina', 
-    'bailarín de ballet': 'bailarina de ballet', 
-    'baloncestista': 'baloncestista', 
-    'balonmanista': 'balonmanista', 
-    'banjista': 'banjista', 
-    'banquero': 'banquera', 
-    'baterista': 'baterista', 
-    'bhikkhuni': 'bhikkhuni', 
-    'biatleta': 'biatleta', 
-    'bibliotecario': 'bibliotecaria', 
-    'biógrafo': 'biógrafa', 
-    'biólogo': 'bióloga', 
-    'biólogo molecular': 'bióloga molecular', 
-    'bioquímico': 'bioquímica', 
-    'bloguero': 'bloguera', 
-    'botánico': 'botánica', 
-    'boxeador': 'boxeadora', 
-    'cabaretista': 'cabaretista', 
-    'camarógrafo': 'camarógrafa', 
-    'cantante': 'cantante', 
-    'cantante de ópera': 'cantante de ópera', 
-    'cantautor': 'cantautora', 
-    'cardiólogo': 'cardióloga', 
-    'caricaturista': 'caricaturista', 
-    'cartelista': 'cartelista', 
-    'catedrático': 'catedrática', 
-    'ceramista': 'ceramista', 
-    'chef': 'chef', 
-    'ciberactivista': 'ciberactivista', 
-    'científico': 'científica', 
-    'científico de la literatura': 'científica de la literatura', 
-    'ciclista': 'ciclista', 
-    'ciclista de ciclocrós': 'ciclista de ciclocrós', 
-    'ciclista de pista': 'ciclista de pista', 
-    'cirujano': 'cirujana', 
-    'clarinetista': 'clarinetista', 
-    'clavecinista': 'clavecinista', 
-    'cocinero': 'cocinera', 
-    'coleccionista': 'coleccionista', 
-    'coleccionista de arte': 'coleccionista de arte', 
-    'colorista': 'colorista', 
-    'columnista': 'columnista', 
-    'comediante': 'comedianta', 
-    'comediante en vivo': 'comedianta en vivo', 
-    'comentarista': 'comentarista', 
-    'comentarista deportivo': 'comentarista deportiva', 
-    'comerciante': 'comerciante', 
-    'comisario': 'comisaria', 
-    'comisario político': 'comisaria política', 
-    'compilador': 'compiladora', 
-    'compositor': 'compositora', 
-    'compositor de canciones': 'compositora de canciones', 
-    'conductor radiofónico': 'conductora radiofónica', 
-    'conservador del patrimonio': 'conservadora del patrimonio', 
-    'conservador de arte': 'conservadora de arte', 
-    'consultor': 'consultora', 
-    'contorsionista': 'contorsionista', 
-    'coreógrafo': 'coreógrafa', 
-    'corista': 'corista', 
-    'corredor': 'corredora', 
-    'corresponsal': 'corresponsal', 
-    'corresponsal de guerra': 'corresponsal de guerra', 
-    'cortesana': 'cortesana', 
-    'criminólogo': 'criminóloga', 
-    'crítico': 'crítica', 
-    'crítico de arte': 'crítica de arte', 
-    'crítico de cine': 'crítica de cine', 
-    'crítico de teatro': 'crítica de teatro', 
-    'crítico literario': 'crítica literaria', 
-    'cuentista': 'cuentista', 
-    'curler': 'curler', 
-    'dama de compañía': 'dama de compañía', 
-    'delineante': 'delineante', 
-    'demógrafo': 'demógrafa', 
-    'dentista': 'dentista', 
-    'deportista': 'deportista', 
-    'desarrollador de videojuegos': 'desarrolladora de videojuegos', 
-    'diaconisa': 'diaconisa', 
-    'diarista': 'diarista', 
-    'diplomático': 'diplomática', 
-    'dibujante': 'dibujante', 
-    'dibujante arquitectónico': 'dibujante arquitectónica', 
-    'dibujante de historieta': 'dibujante de historieta', 
-    'dibujante de prensa': 'dibujante de prensa', 
-    'director artístico': 'directora artística', 
-    'director de casting': 'directora de casting', 
-    'director de cine': 'directora de cine', 
-    'director de colección': 'directora de colección', 
-    'director de coro': 'directora de coro', 
-    'director de documentales': 'directora de documentales', 
-    'director de estudios': 'directora de estudios', 
-    'director de finanzas': 'directora de finanzas', 
-    'director de fotografía': 'directora de fotografía', 
-    'director de teatro': 'directora de teatro', 
-    'director de televisión': 'directora de televisión', 
-    'director de orquesta': 'directora de orquesta', 
-    'director de videos musicales': 'directora de videos musicales', 
-    'director deportivo': 'directora deportiva', 
-    'director ejecutivo': 'directora ejecutiva', 
-    'director musical': 'directora musical', 
-    'disc jockey': 'disc jockey', 
-    'diseñador': 'diseñadora', 
-    'diseñador de alta costura': 'diseñadora de alta costura', 
-    'diseñador de estampillas': 'diseñadora de estampillas', 
-    'diseñador de joyas': 'diseñadora de joyas', 
-    'diseñador de moda': 'diseñadora de moda', 
-    'diseñador de vestuario': 'diseñadora de vestuario', 
-    'diseñador gráfico': 'diseñadora gráfica', 
-    'diseñador industrial': 'diseñadora industrial', 
-    'diseñador textil': 'diseñadora textil', 
-    'disidente': 'disidente', 
-    'divulgador científico': 'divulgadora científica', 
-    'docente': 'docente', 
-    'documentalista': 'documentalista', 
-    'dramaturgo': 'dramaturga', 
-    'economista': 'economista', 
-    'editor': 'editora', 
-    'editor colaborador': 'editora colaboradora', 
-    'editor de moda': 'editora de moda', 
-    'editor de periódico': 'editora de periódico', 
-    'editor literario': 'editora literaria', 
-    'educador': 'educadora', 
-    'educador especializado': 'educadora especializada', 
-    'educador sexual': 'educadora sexual', 
-    'egiptólogo': 'egiptóloga', 
-    'embajador': 'embajadora', 
-    'empleado': 'empleada', 
-    'emprendedor': 'emprendedora', 
-    'empresario': 'empresaria', 
-    'empresario de medios': 'empresaria de medios', 
-    'enfermero': 'enfermera', 
-    'ensayista': 'ensayista', 
-    'entomólogo': 'entomóloga', 
-    'entrenador': 'entrenadora', 
-    'entrenador de baloncesto': 'entrenadora de baloncesto', 
-    'entrenador de balonmano': 'entrenadora de balonmano', 
-    'entrenador de fútbol': 'entrenadora de fútbol', 
-    'entrenador de tenis': 'entrenadora de tenis', 
-    'entrenador personal': 'entrenadora personal', 
-    'epidemiólogo': 'epidemióloga', 
-    'escalador en roca': 'escaladora en roca', 
-    'escenógrafo': 'escenógrafa', 
-    'escritor': 'escritora', 
-    'escritora': 'escritora', 
-    'escritor de ciencia ficción': 'escritora de ciencia ficción', 
-    'escritor de género policiaco': 'escritora de género policiaco', 
-    'escritor de literatura infantil': 'escritora de literatura infantil', 
-    'escritor de no ficción': 'escritora de no ficción', 
-    'escritor sobre medicina': 'escritora sobre medicina', 
-    'escultor': 'escultora', 
-    'esgrimista': 'esgrimista', 
-    'eslavista': 'eslavista', 
-    'especialista de cine': 'especialista de cine', 
-    'espeleólogo': 'espeleóloga', 
-    'esperantista': 'esperantista', 
-    'esquiador': 'esquiadora', 
-    'esquiador acrobático': 'esquiadora acrobática', 
-    'esquiador alpino': 'esquiadora alpina', 
-    'esquiador de fondo': 'esquiadora de fondo', 
-    'esquiador de travesía': 'esquiadora de travesía', 
-    'esquiador orientador': 'esquiadora orientadora', 
-    'estadista': 'estadista', 
-    'estadístico': 'estadística', 
-    'etnógrafo': 'etnógrafa', 
-    'etnólogo': 'etnóloga', 
-    'etnomusicólogo': 'etnomusicóloga', 
-    'explorador': 'exploradora', 
-    'fabricante de pianos': 'fabricante de pianos', 
-    'feminista': 'feminista', 
-    'filántropo': 'filántropa', 
-    'filólogo': 'filóloga', 
-    'filósofo': 'filósofa', 
-    'filólogo clásico': 'filóloga clásica', 
-    'financiero': 'financiera', 
-    'físico': 'física', 
-    'flautista': 'flautista', 
-    'folclorista': 'folclorista', 
-    'fondista': 'fondista', 
-    'fotógrafo': 'fotógrafa', 
-    'fotógrafo de escena': 'fotógrafa de escena', 
-    'fotomodelo': 'fotomodelo', 
-    'fotoperiodista': 'fotoperiodista', 
-    'funcionario': 'funcionaria', 
-    'futbolista': 'futbolista', 
-    'ganadero': 'ganadera', 
-    'geisha': 'geisha', 
-    'genetista': 'genetista', 
-    'geólogo': 'geóloga', 
-    'germanista': 'germanista', 
-    'gimnasta': 'gimnasta', 
-    'gimnasta artístico': 'gimnasta artística', 
-    'gimnasta rítmico': 'gimnasta rítmica', 
-    'ginecólogo': 'ginecóloga', 
-    'glaciólogo': 'glacióloga', 
-    'golfista': 'golfista', 
-    'grabador': 'grabadora', 
-    'grabador de cobre': 'grabadora de cobre', 
-    'gramático': 'gramática', 
-    'guardabosques': 'guardabosques', 
-    'guía de montaña': 'guía de montaña', 
-    'guionista': 'guionista', 
-    'guionista de historieta': 'guionista de historieta', 
-    'guitarrista': 'guitarrista', 
-    'guitarrista clásico': 'guitarrista clásica', 
-    'guitarrista de jazz': 'guitarrista de jazz', 
-    'hematólogo': 'hematóloga', 
-    'halterófilo': 'halterófila', 
-    'historiador': 'historiadora', 
-    'historiador de la Edad Moderna': 'historiadora de la Edad Moderna', 
-    'historiador de la literatura': 'historiadora de la literatura', 
-    'historiador de la matemática': 'historiadora de la matemática', 
-    'historiador de la música': 'historiadora de la música', 
-    'historiador de la religión': 'historiadora de la religión', 
-    'historiador del arte': 'historiadora del arte', 
-    'historiador del derecho': 'historiadora del derecho', 
-    'historiador local': 'historiadora local', 
-    'historiador social': 'historiadora social', 
-    'historietista': 'historietista', 
-    'humorista': 'humorista', 
-    'humorista gráfico': 'humorista gráfica', 
-    'iconógrafo': 'iconógrafa', 
-    'ilustrador': 'ilustradora', 
-    'ilustrador botánico': 'ilustradora botánica', 
-    'impresor': 'impresora', 
-    'industrial': 'industrial', 
-    'informático teórico': 'informática teórica', 
-    'ingeniero': 'ingeniera', 
-    'ingeniero aeroespacial': 'ingeniera aeroespacial', 
-    'ingeniero civil': 'ingeniera civil', 
-    'ingeniero de software': 'ingeniera de software', 
-    'ingeniero de sonido': 'ingeniera de sonido', 
-    'inmunólogo': 'inmunóloga', 
-    'intendente': 'intendente', 
-    'internista': 'internista', 
-    'intérprete': 'intérprete', 
-    'intérprete musical': 'intérprete musical', 
-    'inventor': 'inventora', 
-    'investigador': 'investigadora', 
-    'japonólogo': 'japonóloga', 
-    'jefe de empresa': 'jefa de empresa', 
-    'jinete hípico': 'jinete hípica', 
-    'jockey': 'jockey', 
-    'joyero': 'joyera', 
-    'jugador de bandy': 'jugadora de bandy', 
-    'jugador de bridge': 'jugadora de bridge', 
-    'jugador de críquet': 'jugadora de críquet', 
-    'jugador de fútbol sala': 'jugadora de fútbol sala', 
-    'jugador de hockey': 'jugadora de hockey', 
-    'jugador de hockey sobre hielo': 'jugadora de hockey sobre hielo', 
-    'jugador de póquer': 'jugadora de póquer', 
-    'jugador de rugby union': 'jugadora de rugby union', 
-    'jugador de sóftbol': 'jugadora de sóftbol', 
-    'jugador de squash': 'jugadora de squash', 
-    'jugador de voleibol de playa': 'jugadora de voleibol de playa', 
-    'juez': 'jueza', 
-    'jugador de go': 'jugadora de go', 
-    'jurisconsulto': 'jurisconsulta', 
-    'jurista': 'jurista', 
-    'kayakista': 'kayakista', 
-    'karateka': 'karateka', 
-    'lanzador de disco': 'lanzadora de disco', 
-    'lanzador de jabalina': 'lanzadora de jabalina', 
-    'lanzador de martillo': 'lanzadora de martillo', 
-    'lavandera': 'lavandera', 
-    'letrista': 'letrista', 
-    'lexicógrafo': 'lexicógrafa', 
-    'librero': 'librera', 
-    'libretista': 'libretista', 
-    'lingüista': 'lingüista', 
-    'literato': 'literata', 
-    'litógrafo': 'litógrafa', 
-    'lobista': 'lobista', 
-    'locutor': 'locutora', 
-    'luchador de artes marciales mixtas': 'luchadora de artes marciales mixtas', 
-    'luchador profesional': 'luchadora profesional', 
-    'luger': 'luger', 
-    'maestro': 'maestra', 
-    'maestro cervecero': 'maestra cervecera', 
-    'maestro de ballet': 'maestra de ballet', 
-    'maestro de ceremonias': 'maestra de ceremonias', 
-    'maestro de teatro': 'maestra de teatro', 
-    'magistrado': 'magistrada', 
-    'mago': 'maga', 
-    'manager': 'manager', 
-    'mandolinista': 'mandolinista', 
-    'mangaka': 'mangaka', 
-    'maquillador': 'maquilladora', 
-    'maratonista': 'maratonista', 
-    'marchante de arte': 'marchante de arte', 
-    'marino': 'marina', 
-    'matemático': 'matemática', 
-    'matrona': 'matrona', 
-    'mecenas': 'mecenas', 
-    'medallista': 'medallista', 
-    'médico': 'médico', 
-    'médico especialista': 'médico especialista', 
-    'medievalista': 'medievalista', 
-    'mediofondista': 'mediofondista', 
-    'memorialista': 'memorialista', 
-    'mezzosoprano': 'mezzosoprano', 
-    'microbiólogo': 'microbióloga', 
-    'miembro de la Knéset': 'miembro de la Knéset', 
-    'militante de la resistencia': 'militante de la resistencia', 
-    'militar': 'militar', 
-    'misionero': 'misionera', 
-    'místico': 'mística', 
-    'modelo': 'modelo', 
-    'modelo artístico': 'modelo artística', 
-    'modelo erótico': 'modelo erótica', 
-    'modelo erótica': 'modelo erótica', 
-    'modista': 'modista', 
-    'monja': 'monja', 
-    'montador': 'montadora', 
-    'montañero': 'montañera', 
-    'mosaiquista': 'mosaiquista', 
-    'multiinstrumentista': 'multiinstrumentista', 
-    'museólogo': 'museóloga', 
-    'musher': 'musher', 
-    'músico': 'música', 
-    'musicólogo': 'musicóloga', 
-    'músico de jazz': 'música de jazz', 
-    'nadador': 'nadadora', 
-    'nadador sincronizado': 'nadadora sincronizada', 
-    'nadadora sincronizada': 'nadadora sincronizada', 
-    'nana': 'nana', 
-    'narrador en off': 'narradora en off', 
-    'naturalista': 'naturalista', 
-    'navegante': 'navegante', 
-    'neurocientífico': 'neurocientífica', 
-    'neurólogo': 'neuróloga', 
-    'novelista': 'novelista', 
-    'numismático': 'numismática', 
-    'nutricionista': 'nutricionista', 
-    'oboísta': 'oboísta', 
-    'obstetra': 'obstetra', 
-    'oceanógrafo': 'oceanógrafa', 
-    'oficial': 'oficial', 
-    'oftalmólogo': 'oftalmóloga', 
-    'oncólogo': 'oncóloga', 
-    'orador motivacional': 'oradora motivacional', 
-    'organista': 'organista', 
-    'organizador sindical': 'organizadora sindical', 
-    'orientador': 'orientadora', 
-    'ornitólogo': 'ornitóloga', 
-    'pacifista': 'pacifista', 
-    'paleontólogo': 'paleontóloga', 
-    'paracaidista': 'paracaidista', 
-    'párroco': 'párroca', 
-    'pastor': 'pastora', 
-    'patinador artístico sobre hielo': 'patinadora artística sobre hielo', 
-    'patinador de velocidad': 'patinadora de velocidad', 
-    'participante de concurso de belleza': 'participante de concurso de belleza', 
-    'payaso': 'payasa', 
-    'pedagogo': 'pedagoga', 
-    'pediatra': 'pediatra', 
-    'peluquero': 'peluquera', 
-    'pentatleta': 'pentatleta', 
-    'percusionista': 'percusionista', 
-    'performer': 'performer', 
-    'perfumista': 'perfumista', 
-    'periodista': 'periodista', 
-    'periodista científico': 'periodista científica', 
-    'periodista político': 'periodista política', 
-    'pianista': 'pianista', 
-    'piloto de automovilismo': 'piloto de automovilismo', 
-    'piloto de carreras': 'piloto de carreras', 
-    'piloto de guerra': 'piloto de guerra', 
-    'piloto de helicóptero': 'piloto de helicóptero', 
-    'piloto de motociclismo': 'piloto de motociclismo', 
-    'piloto de pruebas': 'piloto de pruebas', 
-    'pintor': 'pintora', 
-    'pintor retratista': 'pintora retratista', 
-    'piragüista': 'piragüista', 
-    'playmate': 'playmate', 
-    'podcaster': 'podcaster', 
-    'poeta': 'poeta', 
-    'político': 'política', 
-    'politólogo': 'politóloga', 
-    'portavoz': 'portavoz', 
-    'prehistoriador': 'prehistoriadora', 
-    'presentador': 'presentadora', 
-    'presentador de noticias': 'presentadora de noticias', 
-    'presentador de televisión': 'presentadora de televisión', 
-    'princesa': 'princesa', 
-    'productor': 'productora', 
-    'productor de cine': 'productora de cine', 
-    'productor de radio': 'productora de radio', 
-    'productor de televisión': 'productora de televisión', 
-    'productor discográfico': 'productora discográfica', 
-    'productor ejecutivo': 'productora ejecutiva', 
-    'profesor': 'profesora', 
-    'profesor de educación superior': 'profesora de educación superior', 
-    'profesor de música': 'profesora de música', 
-    'profesor de voz': 'profesora de voz', 
-    'programador': 'programadora', 
-    'prosista': 'prosista', 
-    'prostituta': 'prostituta', 
-    'psicoanalista': 'psicoanalista', 
-    'psicólogo': 'psicóloga', 
-    'psicoterapeuta': 'psicoterapeuta', 
-    'psiquiatra': 'psiquiatra', 
-    'publicista': 'publicista', 
-    'químico': 'química', 
-    'rabino': 'rabina', 
-    'rapero': 'rapera', 
-    'realizador': 'realizadora', 
-    'redactor en jefe': 'redactora en jefe', 
-    'redactor de discursos': 'redactora de discursos', 
-    'regatista': 'regatista', 
-    'religioso': 'religiosa', 
-    'remero': 'remera', 
-    'reportero': 'reportera', 
-    'restaurador': 'restauradora', 
-    'revolucionario': 'revolucionaria', 
-    'sacerdote': 'sacerdote', 
-    'salonnière': 'salonnière', 
-    'saltador': 'saltadora', 
-    'saltador de altura': 'saltadora de altura', 
-    'saltador de esquí': 'saltadora de esquí', 
-    'saltador de longitud': 'saltadora de longitud', 
-    'saltador de pértiga': 'saltadora de pértiga', 
-    'saltador de triple salto': 'saltadora de triple salto', 
-    'samurái': 'samurái', 
-    'sastre': 'sastre', 
-    'saxofonista': 'saxofonista', 
-    'secretario': 'secretaria', 
-    'seiyū': 'seiyū', 
-    'sindicalista': 'sindicalista', 
-    'snowboarder': 'snowboarder', 
-    'socialité': 'socialité', 
-    'sociólogo': 'socióloga', 
-    'soldado': 'soldado', 
-    'solista': 'solista', 
-    'supermodelo': 'supermodelo', 
-    'soprano': 'soprana', 
-    'sufragete': 'sufragete', 
-    'surfista': 'surfista', 
-    'talud': 'talud', 
-    'tatuador': 'tatuadora', 
-    'tarento': 'tarento', 
-    'técnico en emergencias médicas': 'técnica en emergencias médicas', 
-    'tejedor': 'tejedora', 
-    'tendero': 'tendera', 
-    'tenista': 'tenista', 
-    'tenista de mesa': 'tenista de mesa', 
-    'tenista en silla de ruedas': 'tenista en silla de ruedas', 
-    'teólogo': 'teóloga', 
-    'teórico literario': 'teórica literaria', 
-    'teórico racial': 'teórica racial', 
-    'teclista': 'teclista', 
-    'tipógrafo': 'tipógrafa', 
-    'tirador': 'tiradora', 
-    'titiritero': 'titiritera', 
-    'torturador': 'torturadora', 
-    'traductor': 'traductora', 
-    'traductor de la Biblia': 'traductora de la Biblia', 
-    'triatleta': 'triatleta', 
-    'trompetista': 'trompetista', 
-    'trompista': 'trompista', 
-    'ufólogo': 'ufóloga', 
-    'ultramaratonista': 'ultramaratonista', 
-    'urbanista': 'urbanista', 
-    'vallista': 'vallista', 
-    'velocista': 'velocista', 
-    'verdugo': 'verdugo', 
-    'veterinario': 'veterinaria', 
-    'videoartista': 'videoartista', 
-    'videógrafo': 'videógrafa', 
-    'violinista': 'violinista', 
-    'violonchelista': 'violonchelista', 
-    'viticultor': 'viticultora', 
-    'vitralista': 'vitralista', 
-    'vocalista': 'vocalista', 
-    'volatinero': 'volatinero', 
-    'voleibolista': 'voleibolista', 
-    'vulcanólogo': 'vulcanóloga', 
-    'wikipedista': 'wikipedista', 
-    'windsurfista': 'windsurfista', 
-    'yudoca': 'yudoca', 
-    'youtuber': 'youtuber', 
-    'zoólogo': 'zoóloga', 
-}
 
 def convertirfecha(fecha):
     num2month = {1: 'enero', 2: 'febrero', 3: 'marzo', 4: 'abril', 5: 'mayo', 6: 'junio', 7: 'julio', 8: 'agosto', 9: 'septiembre', 10: 'octubre', 11: 'noviembre', 12: 'diciembre'}
@@ -1056,6 +111,9 @@ def group_unconcat(concat='', labelclass=''):
 
 def main():
     global labels
+    global paises2qid_list
+    global nacionalidades
+    global ocupaciones
     
     labels['occupations'] = getOccupationLabels()
     labels['occupations'] = labels['occupations'].copy()
@@ -1065,34 +123,34 @@ def main():
     skipuntilcountry = ''
     skipuntilbio = ''
     skipbios = []
-    for p27k, p27v in p27list:
+    for pk, pv in paises2qid_list:
         subtotalbios = 0
-        print('\n','#'*50,'\n',p27k,p27v,'\n','#'*50)
+        print('\n','#'*50,'\n',pk,pv,'\n','#'*50)
         if skipuntilcountry:
-            if skipuntilcountry == p27k:
+            if skipuntilcountry == pk:
                 skipuntilcountry = ''
             else:
                 print('Skiping until... %s' % (skipuntilcountry))
                 continue
         
         yearranges = [[1, 1000], [1000, 1200], [1200, 1300], [1300, 1400], [1400, 1500], [1500, 1550], [1550, 1600]]
-        for yearstart, yearend, yearstep in [[1600, 1700, 20], [1700, 1800, 10], [1800, 1900, 5], [1900, 1990, 1]]:
+        for yearstart, yearend, yearstep in [[1600, 1700, 10], [1700, 1800, 5], [1800, 1900, 2], [1900, 1990, 1]]:
             for yearx in range(yearstart, yearend):
                 if yearx % yearstep == 0:
                     yearranges.append([yearx, yearx+yearstep])
         
         for minyear, maxyear in yearranges:
             print('\nFrom %s to %s' % (minyear, maxyear))
-            url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A(GROUP_CONCAT(%3Feducated%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Feducatedat)%0A(GROUP_CONCAT(%3Fposition%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Fpositions)%0A(GROUP_CONCAT(%3Foccupation%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Foccupations)%0A(GROUP_CONCAT(%3Faward%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Fawards)%0A%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A'+p27v+'.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3E%3D%20'+str(minyear)+')%20.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3C%20'+str(maxyear)+')%20.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP69%20%3Feducated.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP39%20%3Fposition.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP166%20%3Faward.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%20%7D%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%2Cca%2Cpt%2Cit%2Cfr%2Cde%2Ccz%2Chu%22%20%7D%0A%7D%0AGROUP%20BY%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%3Fimage%20%3Fcommonscat%20%3Fwebsite%20'
-            
+            url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=SELECT%20DISTINCT%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A(GROUP_CONCAT(DISTINCT%20%3Feducated%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Feducatedat)%0A(GROUP_CONCAT(DISTINCT%20%3Fposition%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Fpositions)%0A(GROUP_CONCAT(DISTINCT%20%3Foccupation%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Foccupations)%0A(GROUP_CONCAT(DISTINCT%20%3Faward%3B%20separator%20%3D%20%22%3B%20%22)%20AS%20%3Fawards)%0A%3FworksLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Ffacebook%20%3Fgoogleplus%20%3Finstagram%20%3Ftwitter%0A%3FfatherLabel%20%3FmotherLabel%20%3FbrotherLabel%20%3FsisterLabel%20%3FspouseLabel%20%3FchildLabel%0AWHERE%20%7B%0A%20%20%3Fitem%20wdt%3AP31%20wd%3AQ5.%0A%20%20%3Fitem%20wdt%3AP27%20wd%3A'+pv+'.%0A%20%20%3Fitem%20wdt%3AP27%20%3Fcountry.%0A%20%20%3Fitem%20wdt%3AP21%20%3Fsex.%0A%20%20%3Fitem%20wdt%3AP19%20%3Fbirthplace.%0A%20%20%3Fitem%20wdt%3AP569%20%3Fbirthdate.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3E%3D%20'+str(minyear)+')%20.%0A%20%20FILTER%20(year(%3Fbirthdate)%20%3C%20'+str(maxyear)+')%20.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP20%20%3Fdeathplace.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP570%20%3Fdeathdate.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP69%20%3Feducated.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP39%20%3Fposition.%20%7D%0A%20%20%3Fitem%20wdt%3AP106%20%3Foccupation.%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP166%20%3Faward.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP800%20%3Fworks.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP18%20%3Fimage.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP373%20%3Fcommonscat.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP856%20%3Fwebsite.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP2013%20%3Ffacebook.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP2847%20%3Fgoogleplus.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP2003%20%3Finstagram.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP2002%20%3Ftwitter.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP22%20%3Ffather.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP25%20%3Fmother.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP7%20%3Fbrother.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP9%20%3Fsister.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP26%20%3Fspouse.%20%7D%0A%20%20OPTIONAL%20%7B%20%3Fitem%20wdt%3AP40%20%3Fchild.%20%7D%0A%20%20FILTER%20NOT%20EXISTS%20%7B%20%3Fwfr%20schema%3Aabout%20%3Fitem%20.%20%3Fwfr%20schema%3AinLanguage%20%22es%22%20%7D%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22es%2Cen%2Cca%2Cgl%2Cpt%2Cit%2Cfr%2Cde%2Ceu%2Ccz%2Chu%2Cnl%2Csv%2Cno%2Cfi%2Cro%2Ceo%2Cda%2Csk%2Ctr%22%20%7D%0A%7D%0AGROUP%20BY%20%3Fitem%20%3FitemLabel%20%3FcountryLabel%20%3FsexLabel%0A%3FbirthplaceLabel%20%3Fbirthdate%20%3FdeathplaceLabel%20%3Fdeathdate%20%0A%3FworksLabel%20%3Fimage%20%3Fcommonscat%20%3Fwebsite%20%3Ffacebook%20%3Fgoogleplus%20%3Finstagram%20%3Ftwitter%20%0A%3FfatherLabel%20%3FmotherLabel%20%3FbrotherLabel%20%3FsisterLabel%20%3FspouseLabel%20%3FchildLabel'
             """
 SELECT DISTINCT ?item ?itemLabel ?countryLabel ?sexLabel
 ?birthplaceLabel ?birthdate ?deathplaceLabel ?deathdate 
-(GROUP_CONCAT(?educated; separator = "; ") AS ?educatedat)
-(GROUP_CONCAT(?position; separator = "; ") AS ?positions)
-(GROUP_CONCAT(?occupation; separator = "; ") AS ?occupations)
-(GROUP_CONCAT(?award; separator = "; ") AS ?awards)
-?image ?commonscat ?website 
+(GROUP_CONCAT(DISTINCT ?educated; separator = "; ") AS ?educatedat)
+(GROUP_CONCAT(DISTINCT ?position; separator = "; ") AS ?positions)
+(GROUP_CONCAT(DISTINCT ?occupation; separator = "; ") AS ?occupations)
+(GROUP_CONCAT(DISTINCT ?award; separator = "; ") AS ?awards)
+?worksLabel ?image ?commonscat ?website ?facebook ?googleplus ?instagram ?twitter
+?fatherLabel ?motherLabel ?brotherLabel ?sisterLabel ?spouseLabel ?childLabel
 WHERE {
   ?item wdt:P31 wd:Q5.
   ?item wdt:P27 wd:Q183.
@@ -1100,23 +158,35 @@ WHERE {
   ?item wdt:P21 ?sex.
   ?item wdt:P19 ?birthplace.
   ?item wdt:P569 ?birthdate.
-  FILTER (year(?birthdate) >= 1877) .
-  FILTER (year(?birthdate) < 1878) .
+  FILTER (year(?birthdate) >= 1980) .
+  FILTER (year(?birthdate) < 1981) .
   OPTIONAL { ?item wdt:P20 ?deathplace. }
   OPTIONAL { ?item wdt:P570 ?deathdate. }
   OPTIONAL { ?item wdt:P69 ?educated. }
   OPTIONAL { ?item wdt:P39 ?position. }
   ?item wdt:P106 ?occupation.
   OPTIONAL { ?item wdt:P166 ?award. }
+  OPTIONAL { ?item wdt:P800 ?works. }
   OPTIONAL { ?item wdt:P18 ?image. }
   OPTIONAL { ?item wdt:P373 ?commonscat. }
   OPTIONAL { ?item wdt:P856 ?website. }
+  OPTIONAL { ?item wdt:P2013 ?facebook. }
+  OPTIONAL { ?item wdt:P2847 ?googleplus. }
+  OPTIONAL { ?item wdt:P2003 ?instagram. }
+  OPTIONAL { ?item wdt:P2002 ?twitter. }
+  OPTIONAL { ?item wdt:P22 ?father. }
+  OPTIONAL { ?item wdt:P25 ?mother. }
+  OPTIONAL { ?item wdt:P7 ?brother. }
+  OPTIONAL { ?item wdt:P9 ?sister. }
+  OPTIONAL { ?item wdt:P26 ?spouse. }
+  OPTIONAL { ?item wdt:P40 ?child. }
   FILTER NOT EXISTS { ?wfr schema:about ?item . ?wfr schema:inLanguage "es" }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en,ca,pt,it,fr,de,cz,hu" }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en,ca,gl,pt,it,fr,de,eu,cz,hu,nl,sv,no,fi,ro,eo,da,sk,tr" }
 }
 GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
 ?birthplaceLabel ?birthdate ?deathplaceLabel ?deathdate 
-?image ?commonscat ?website 
+?worksLabel ?image ?commonscat ?website ?facebook ?googleplus ?instagram ?twitter 
+?fatherLabel ?motherLabel ?brotherLabel ?sisterLabel ?spouseLabel ?childLabel
             """
             #print(url)
             url = '%s&format=json' % (url)
@@ -1135,6 +205,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 print('Server return empty file')
                 continue
             
+            # captura de datos de biografias
             bios = {}
             for result in json1['results']['bindings']:
                 q = 'item' in result and result['item']['value'].split('/entity/')[1] or ''
@@ -1172,26 +243,35 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 occupations = group_unconcat('occupations' in result and result['occupations']['value'] or '', 'occupations')
                 awards = group_unconcat('awards' in result and result['awards']['value'] or '', 'awards')
                 
+                works = 'worksLabel' in result and result['worksLabel']['value'] or ''
                 image = 'image' in result and urllib.parse.unquote(result['image']['value']).split('/Special:FilePath/')[1] or ''
                 commonscat = 'commonscat' in result and result['commonscat']['value'] or ''
                 if commonscat:
                     commonscat = 'Category:%s' % (commonscat)
                 website = 'website' in result and result['website']['value'] or ''
                 
+                # no usamos concat en familiares pq son pocos los elementos que lo tienen y no merece la pena el esfuerzo de pedir los labels a la API uno a uno (que raramente se reutilizaran en otros elementos, al contrario que con las ocupaciones, etc)
+                father = 'fatherLabel' in result and result['fatherLabel']['value'] or ''
+                mother = 'motherLabel' in result and result['motherLabel']['value'] or ''
+                brother = 'brotherLabel' in result and result['brotherLabel']['value'] or ''
+                sister = 'sisterLabel' in result and result['sisterLabel']['value'] or ''
+                child = 'childLabel' in result and result['childLabel']['value'] or ''
+                
                 if q in bios:
-                    for x, y in [[country, 'countries'], [sexo, 'sexo'], [lnac, 'lnac'], [fnac, 'fnac'], [lfal, 'lfal'], [ffal, 'ffal'], [image, 'images'], [commonscat, 'commonscat'], [website, 'websites']]: #parametros sencillos
-                        if x and x not in bios[q][y]:
+                    for x, y in [[country, 'countries'], [sexo, 'sexo'], [lnac, 'lnac'], [fnac, 'fnac'], [lfal, 'lfal'], [ffal, 'ffal'], [works, 'works'], [image, 'images'], [commonscat, 'commonscat'], [website, 'websites'], [father, 'father'], [mother, 'mother'], [brother, 'brother'], [sister, 'sister'], [child, 'child']]: #parametros sencillos
+                        if x and not re.search(r'Q\d+', x) and x not in bios[q][y]:
                             bios[q][y].append(x)
                             bios[q][y].sort()
                     for x, y in [[educatedat, 'educatedat'], [positions, 'positions'], [occupations, 'occupations'], [awards, 'awards']]: #parametros group_concat
                         for xx in x:
-                            if xx and xx not in bios[q][y]:
+                            if xx and not re.search(r'Q\d+', xx) and xx not in bios[q][y]:
                                 bios[q][y].append(xx)
                                 bios[q][y].sort()
                 else:
                     bios[q] = {
-                        'q': q, 'nombre': nombre, 'countries': [country], 'sexo': [sexo], 'lnac': [lnac], 'fnac': [fnac], 'lfal': [lfal], 'ffal': [ffal], 'educatedat': educatedat, 'positions': positions, 'occupations': occupations, 'awards': awards, 'images': [image], 'commonscat': [commonscat], 'websites': [website], 
+                        'q': q, 'nombre': nombre, 'countries': [country], 'sexo': [sexo], 'lnac': [lnac], 'fnac': [fnac], 'lfal': [lfal], 'ffal': [ffal], 'educatedat': educatedat, 'positions': positions, 'occupations': occupations, 'awards': awards, 'works': [works], 'images': [image], 'commonscat': [commonscat], 'websites': [website], 'father': [father], 'mother': [mother], 'brother': [brother], 'sister': [sister], 'child': [child], 
                     }
+            #fin captura de datos
             
             bios_list = [[props['nombre'], q, props] for q, props in bios.items()]
             bios_list.sort()
@@ -1230,6 +310,9 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 awards = props['awards']
                 if '' in awards:
                     awards.remove('')
+                works = props['works']
+                if '' in works:
+                    works.remove('')
                 
                 if not occupations:
                     print('Error, sin ocupacion, saltamos')
@@ -1252,6 +335,17 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                     print('Mas de un lugar de fallecimiento, saltamos')
                     continue
                 #fin quizas
+                
+                #resolucion de fechas
+                if props['fnac'][0].endswith('-01-01') and props['ffal'][0].endswith('-01-01'): # si nace y muere en 1 enero
+                    props['fnac'][0] = props['fnac'][0].split('-')[0]
+                    props['ffal'][0] = props['ffal'][0].split('-')[0]
+                elif int(props['fnac'][0].split('-')[0]) < 1900 and props['fnac'][0].endswith('-01-01'):
+                    props['fnac'][0] = props['fnac'][0].split('-')[0]
+                elif int(props['ffal'][0].split('-')[0]) < 1900 and props['ffal'][0].endswith('-01-01'):
+                    props['ffal'][0] = props['ffal'][0].split('-')[0]
+                #fin resolucion fechas
+                
                 images = props['images']
                 if '' in images:
                     images.remove('')
@@ -1269,6 +363,13 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                     #print('No hay website, saltamos')
                     #continue
                 
+                if len(props['father']) > 1:
+                    print('Mas de un padre, saltamos')
+                    continue
+                if len(props['mother']) > 1:
+                    print('Mas de una madre, saltamos')
+                    continue
+                
                 #start occupations
                 #remove unuseful occupations
                 occupations2 = []
@@ -1283,19 +384,19 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 skipbio = False
                 if 'sexo' in props and props['sexo'][0] == 'femenino':
                     for occupation in occupations:
-                        if occupation not in ocupfem:
+                        if occupation not in ocupaciones:
                             skipbio = True #skip this bio, we have not female translation for this ocupation
                             print('Falta traduccion femenina para:', occupation)
                             with open('missing-female-ocups.txt', 'a') as logfile:
                                 logfile.write('%s\n' % (occupation))
                     if skipbio:
                         continue
-                    occupations = [ocupfem[x] for x in occupations]
+                    occupations = [ocupaciones[x]['fs'] for x in occupations]
                 #end occupations
                 
                 skipbio = False
                 for country in countries:
-                    if not country in country2nationality:
+                    if not country in nacionalidades:
                         skipbio = True
                         print('Falta nacionalidad para:', country)
                         with open('missing-nationalities.txt', 'a') as logfile:
@@ -1303,20 +404,27 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                 if skipbio:
                     continue
                 
+                sexo = '%ss' % (props['sexo'][0][0]) # ms or fs, masculino singular, femenino singular
                 properties_list = [
                     ['Clase', 'persona'], 
                     ['Nombre', props['nombre']], 
-                    ['Sexo', ', '.join(props['sexo'])], 
+                    ['Sexo', '; '.join(props['sexo'])], 
                     ['Imagen', images and 'File:%s' % (images[0]) or ''], #only 1 image
-                    ['Fecha de nacimiento', ', '.join(props['fnac'])], 
-                    ['Lugar de nacimiento', ', '.join(props['lnac'])], 
-                    ['Fecha de fallecimiento', ', '.join(props['ffal'])], 
-                    ['Lugar de fallecimiento', ', '.join(props['lfal'])], 
-                    ['Nacionalidad', ', '.join([country2nationality[x][props['sexo'][0]] for x in countries])], 
-                    ['Estudiado en', ', '.join(educatedat)], 
-                    ['Cargo', ', '.join(positions)], 
-                    ['Ocupación', ', '.join(occupations)], 
-                    ['Premio', ', '.join(awards)], 
+                    ['Fecha de nacimiento', '; '.join(props['fnac'])], 
+                    ['Lugar de nacimiento', '; '.join(props['lnac'])], 
+                    ['Fecha de fallecimiento', '; '.join(props['ffal'])], 
+                    ['Lugar de fallecimiento', '; '.join(props['lfal'])], 
+                    ['Nacionalidad', '; '.join([nacionalidades[x][sexo] for x in countries])], 
+                    ['Estudiado en', '; '.join(educatedat)], 
+                    ['Cargo', '; '.join(positions)], 
+                    ['Ocupación', '; '.join(occupations)], 
+                    ['Premio', '; '.join(awards)], 
+                    ['Obra destacada', '; '.join(works)], 
+                    ['Padre', '; '.join(father)], 
+                    ['Madre', '; '.join(mother)], 
+                    ['Hermano', '; '.join(brother)], 
+                    ['Hermana', '; '.join(brother)], 
+                    ['Descendiente', '; '.join(child)], 
                 ]
                 
                 gallery = ''.join(["{{Gallery file\n|filename=%s\n}}" % (x) for x in images])
@@ -1326,7 +434,7 @@ GROUP BY ?item ?itemLabel ?countryLabel ?sexLabel
                     if pvalue:
                         properties += "{{Property\n|property=%s\n|value=%s\n}}" % (pname, pvalue)
 
-                output = """{{Infobox Result2
+                output = """{{Persona
 |search=%s%s
 |wikidata=%s%s%s%s
 }}""" % (props['nombre'], props['commonscat'] and '\n|commons=%s' % (props['commonscat'][0]) or '', props['q'], websites and '\n|websites=%s' % (websites) or '', gallery and '\n|gallery=%s' % (gallery) or '', properties and '\n|properties=%s' % (properties) or '')

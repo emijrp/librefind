@@ -8,6 +8,7 @@ You can see a beta version in [librefind.org](http://www.librefind.org) (edits c
 
 ## Features
 <img src=http://static.librefind.org/mw/b/b7/Librefind_logo_transparent.png align=right width=300px />
+
 * Collaborative
 * Free, open-source
 * Privacy

@@ -1,4 +1,4 @@
-#LibreFind
+# LibreFind
 
 **[LibreFind](http://www.librefind.org)** is a free **wiki search engine** with results sorted by **community consensus**.
 

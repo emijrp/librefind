@@ -7,7 +7,7 @@ We use MediaWiki, the software of Wikipedia, and Semantic MediaWiki. When you se
 You can see a beta version in [librefind.org](https://librefind.wikis.cc/) (edits closed by now) and examples of a bit curated results pages for [Spain](https://librefind.wikis.cc/wiki/Spain) or [Edgar Allan Poe](https://librefind.wikis.cc/wiki/Edgar_Allan_Poe).
 
 ## Features
-<img src=https://librefind.wikis.cc/mw/b/b7/Librefind_logo_transparent.png align=right width=300px />
+<img src=https://files.wikis.cc/librefind.wikis.cc/b/b7/Librefind_logo_transparent.png align=right width=300px />
 
 * Collaborative
 * Free, open-source

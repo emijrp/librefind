@@ -17,7 +17,7 @@ class Family(family.WikimediaFamily):
         self.name = 'librefind'
 
         self.langs = {
-            'librefind': 'www.librefind.org',
+            'librefind': 'librefind.wikis.cc',
         }
         
         """self.namespaces = {}
